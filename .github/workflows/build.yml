@@ -7,8 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: mingc/android-build-box:latest
 
     steps:
     - uses: actions/checkout@v4
@@ -19,7 +17,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Create Project and Build
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install Android SDK 35
+      run: |
+        sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+    - name: Create Android Project
       run: |
         mkdir -p project/app/src/main/assets
         mkdir -p project/app/src/main/java/com/mafia/oyun
@@ -43,7 +48,7 @@ jobs:
                 mavenCentral()
             }
             dependencies {
-                classpath 'com.android.tools.build:gradle:7.4.2'
+                classpath 'com.android.tools.build:gradle:8.1.0'
             }
         }
         allprojects {
@@ -82,7 +87,7 @@ jobs:
             }
         }
         dependencies {
-            implementation 'androidx.appcompat:appcompat:1.4.0'
+            implementation 'androidx.appcompat:appcompat:1.6.1'
         }
         EOF
 
@@ -136,9 +141,9 @@ jobs:
           -dname "CN=Mafia Oyunu, OU=Games, O=Baku, L=Baku, S=Baku, C=AZ"
 
         cd project
-        wget -q https://services.gradle.org/distributions/gradle-7.5-bin.zip
-        unzip -q gradle-7.5-bin.zip
-        JAVA_HOME=$JAVA_HOME ./gradle-7.5/bin/gradle wrapper --gradle-version=7.5
+        wget -q https://services.gradle.org/distributions/gradle-8.1-bin.zip
+        unzip -q gradle-8.1-bin.zip
+        ./gradle-8.1/bin/gradle wrapper --gradle-version=8.1
         JAVA_HOME=$JAVA_HOME ./gradlew bundleRelease
 
       env:
