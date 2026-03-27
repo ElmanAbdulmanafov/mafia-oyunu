@@ -9,14 +9,8 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192/c0392b/ffffff?text=M",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://via.placeholder.com/512/c0392b/ffffff?text=M",
-      "sizes": "512x512",
+      "src": "/mafia-oyunu/icon.png",
+      "sizes": "192x192 512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
