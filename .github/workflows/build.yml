@@ -10,30 +10,38 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
-    
+
     - name: Setup Node
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
-    
+        node-version: '20'
+
     - name: Install Bubblewrap
       run: npm install -g @bubblewrap/cli
-    
-    - name: Init Bubblewrap
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Init TWA project
       run: |
-        bubblewrap init --manifest="https://elmanabdulmanafov.github.io/mafia-oyunu/manifest.json"
-    
+        mkdir twa-app && cd twa-app
+        bubblewrap init \
+          --manifest="https://elmanabdulmanafov.github.io/mafia-oyunu/manifest.json" \
+          --directory=.
+
     - name: Build APK
-      run: bubblewrap build
-    
+      run: |
+        cd twa-app
+        bubblewrap build --skipPwaValidation
+
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: mafia-apk
-        path: '*.apk'
+        path: 'twa-app/app-release-unsigned.apk'
