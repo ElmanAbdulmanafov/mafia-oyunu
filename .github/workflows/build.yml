@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android AAB
 
 on:
   push:
@@ -128,9 +128,12 @@ jobs:
           -storepass $STORE_PASSWORD \
           -keypass $KEY_PASSWORD \
           -dname "CN=Mafia Oyunu, OU=Games, O=Baku, L=Baku, S=Baku, C=AZ"
+
         cd project
-                /opt/gradle/gradle-7.5/bin/gradle wrapper --gradle-version=7.5
-                ./gradlew bundleRelease
+        wget -q https://services.gradle.org/distributions/gradle-7.5-bin.zip
+        unzip -q gradle-7.5-bin.zip
+        ./gradle-7.5/bin/gradle wrapper --gradle-version=7.5
+        ./gradlew bundleRelease
 
       env:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
