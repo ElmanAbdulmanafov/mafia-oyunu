@@ -26,6 +26,19 @@ jobs:
         cp index.html app/src/main/assets/
 
         cat > settings.gradle.kts << 'EOF'
+        pluginManagement {
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+        dependencyResolutionManagement {
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
         rootProject.name = "MafiaOyunu"
         include(":app")
         EOF
@@ -63,12 +76,6 @@ jobs:
         zipStoreBase=GRADLE_USER_HOME
         zipStorePath=wrapper/dists
         EOF
-
-        cat > gradlew << 'EOF'
-        #!/bin/sh
-        exec gradle "$@"
-        EOF
-        chmod +x gradlew
 
         cat > app/src/main/java/com/mafia/oyun/MainActivity.java << 'EOF'
         package com.mafia.oyun;
@@ -110,11 +117,9 @@ jobs:
         </manifest>
         EOF
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-
     - name: Build APK
-      run: gradle assembleDebug
+      run: |
+        gradle assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
