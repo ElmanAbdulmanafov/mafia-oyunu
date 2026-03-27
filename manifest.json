@@ -1,0 +1,22 @@
+{
+  "name": "Mafia Oyunu",
+  "short_name": "Mafia",
+  "description": "Baku Underground Mafia Oyunu",
+  "start_url": "/mafia-oyunu/",
+  "display": "standalone",
+  "background_color": "#0a0705",
+  "theme_color": "#c0392b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/c0392b/ffffff?text=M",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/c0392b/ffffff?text=M",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
