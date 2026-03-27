@@ -1,1101 +1,339 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-<link rel="manifest" href="/mafia-oyunu/manifest.json">
+<link rel="manifest" href="/mafia-oyunu/manifest.json">  
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAFİYA — Baku Underground</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0705;
-    --bg2: #110e0b;
-    --card: #1a1410;
-    --red: #c0392b;
-    --red2: #e74c3c;
-    --gold: #d4a853;
-    --gold2: #f0c060;
-    --blue: #2980b9;
-    --blue2: #5dade2;
-    --green: #27ae60;
-    --green2: #52be80;
-    --purple: #8e44ad;
-    --purple2: #bb8fce;
-    --teal: #16a085;
-    --teal2: #48c9b0;
-    --orange: #e67e22;
-    --white: #f0e6d3;
-    --muted: #8a7a6a;
-    --border: rgba(212,168,83,0.2);
-    --glow: 0 0 20px rgba(192,57,43,0.4);
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--white);
-    font-family: 'Crimson Pro', Georgia, serif;
-    font-size: 16px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* NOISE TEXTURE */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 999;
-    opacity: 0.5;
-  }
-
-  h1, h2, h3 {
-    font-family: 'Playfair Display', serif;
-    letter-spacing: 0.02em;
-  }
-
-  /* ===== SCREENS ===== */
-  .screen {
-    display: none;
-    min-height: 100vh;
-    padding: 20px;
-    max-width: 960px;
-    margin: 0 auto;
-    animation: fadeIn 0.5s ease;
-  }
-  .screen.active { display: block; }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ===== HEADER ===== */
-  .game-header {
-    text-align: center;
-    padding: 40px 20px 20px;
-    position: relative;
-  }
-  .game-header::after {
-    content: '';
-    display: block;
-    width: 200px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    margin: 16px auto 0;
-  }
-  .game-title {
-    font-size: clamp(2.5rem, 8vw, 5rem);
-    font-weight: 900;
-    color: var(--red2);
-    text-shadow: 0 0 40px rgba(192,57,43,0.6), 0 4px 8px rgba(0,0,0,0.8);
-    line-height: 1;
-  }
-  .game-subtitle {
-    font-size: 1rem;
-    color: var(--gold);
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    margin-top: 6px;
-    font-style: italic;
-  }
-
-  /* ===== BUTTONS ===== */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 28px;
-    border: none;
-    border-radius: 4px;
-    font-family: 'Crimson Pro', serif;
-    font-size: 1rem;
-    font-weight: 400;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    letter-spacing: 0.05em;
-  }
-  .btn-primary {
-    background: var(--red);
-    color: var(--white);
-    box-shadow: 0 4px 20px rgba(192,57,43,0.4);
-  }
-  .btn-primary:hover { background: var(--red2); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(192,57,43,0.6); }
-  .btn-secondary {
-    background: transparent;
-    color: var(--gold);
-    border: 1px solid var(--gold);
-  }
-  .btn-secondary:hover { background: rgba(212,168,83,0.1); }
-  .btn-ghost {
-    background: rgba(255,255,255,0.05);
-    color: var(--white);
-    border: 1px solid rgba(255,255,255,0.1);
-  }
-  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
-  .btn-sm { padding: 8px 16px; font-size: 0.9rem; }
-  .btn-lg { padding: 16px 40px; font-size: 1.2rem; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
-  .btn-full { width: 100%; justify-content: center; }
-
-  /* ===== CARDS ===== */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-  }
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    opacity: 0.4;
-  }
-
-  /* ===== SETUP SCREEN ===== */
-  .setup-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 24px;
-  }
-  @media(max-width: 600px) { .setup-grid { grid-template-columns: 1fr; } }
-
-  .player-input-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding: 10px;
-    background: rgba(255,255,255,0.03);
-    border-radius: 6px;
-    border: 1px solid rgba(255,255,255,0.06);
-    margin-bottom: 8px;
-    transition: border-color 0.2s;
-  }
-  .player-input-row:hover { border-color: rgba(212,168,83,0.2); }
-  .player-num {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--red);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-  input[type="text"], input[type="number"], select {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 4px;
-    color: var(--white);
-    padding: 8px 12px;
-    font-family: 'Crimson Pro', serif;
-    font-size: 1rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  input:focus, select:focus { border-color: var(--gold); }
-  input[type="text"] { flex: 1; }
-  select option { background: #1a1410; }
-
-  .role-config {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
-  .role-config:last-child { border-bottom: none; }
-  .role-label { display: flex; align-items: center; gap: 10px; }
-  .role-icon { font-size: 1.4rem; }
-  .role-name { font-weight: 400; }
-  .role-desc { font-size: 0.8rem; color: var(--muted); font-style: italic; }
-  .role-count-ctrl { display: flex; align-items: center; gap: 8px; }
-  .count-btn {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: var(--white);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem;
-    transition: all 0.2s;
-  }
-  .count-btn:hover { background: rgba(212,168,83,0.2); border-color: var(--gold); }
-  .count-display {
-    width: 32px;
-    text-align: center;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--gold);
-  }
-
-  /* ===== ROLE REVEAL ===== */
-  .role-card {
-    max-width: 360px;
-    margin: 0 auto;
-    text-align: center;
-    padding: 40px 30px;
-    border-radius: 12px;
-    border: 2px solid;
-    position: relative;
-    overflow: hidden;
-  }
-  .role-card-icon { font-size: 5rem; margin-bottom: 16px; display: block; }
-  .role-card-name { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
-  .role-card-player { font-size: 1rem; color: var(--muted); margin-bottom: 20px; font-style: italic; }
-  .role-card-desc { font-size: 1rem; line-height: 1.7; color: var(--white); opacity: 0.9; }
-  .role-card-ability {
-    margin-top: 16px;
-    padding: 12px;
-    border-radius: 6px;
-    background: rgba(0,0,0,0.3);
-    font-size: 0.9rem;
-    font-style: italic;
-    color: var(--gold);
-  }
-
-  /* role colors */
-  .role-mafia { border-color: var(--red); background: linear-gradient(135deg, #1a0a0a, #220e0e); }
-  .role-citizen { border-color: var(--blue); background: linear-gradient(135deg, #0a0f1a, #0e1522); }
-  .role-komissar { border-color: var(--gold); background: linear-gradient(135deg, #1a1500, #221c00); }
-  .role-melek { border-color: var(--purple); background: linear-gradient(135deg, #130a1a, #1c0e22); }
-  .role-kamikaze { border-color: var(--orange); background: linear-gradient(135deg, #1a1000, #221500); }
-  .role-doktor { border-color: var(--green); background: linear-gradient(135deg, #0a1a0f, #0e2215); }
-  .role-ajan { border-color: var(--teal); background: linear-gradient(135deg, #0a1a18, #0e2220); }
-
-  /* ===== PHASE BANNER ===== */
-  .phase-banner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    font-size: 1.3rem;
-    font-weight: 700;
-    font-family: 'Playfair Display', serif;
-    letter-spacing: 0.05em;
-  }
-  .phase-night { background: linear-gradient(135deg, #0d0820, #120a2a); border: 1px solid rgba(100,60,180,0.3); color: #bb9de8; }
-  .phase-day { background: linear-gradient(135deg, #1a1200, #261a00); border: 1px solid rgba(212,168,83,0.3); color: var(--gold); }
-  .phase-vote { background: linear-gradient(135deg, #1a0505, #260808); border: 1px solid rgba(192,57,43,0.3); color: var(--red2); }
-
-  /* ===== PLAYER GRID ===== */
-  .players-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 12px;
-    margin: 20px 0;
-  }
-  .player-tile {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    user-select: none;
-  }
-  .player-tile:hover:not(.dead):not(.disabled) {
-    border-color: var(--gold);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(212,168,83,0.2);
-  }
-  .player-tile.selected {
-    border-color: var(--red2);
-    background: rgba(192,57,43,0.15);
-    box-shadow: 0 0 20px rgba(192,57,43,0.3);
-  }
-  .player-tile.dead {
-    opacity: 0.3;
-    cursor: not-allowed;
-    text-decoration: line-through;
-    filter: grayscale(1);
-  }
-  .player-tile.disabled { cursor: not-allowed; opacity: 0.5; }
-  .player-tile.protected { border-color: var(--green2); box-shadow: 0 0 12px rgba(82,190,128,0.3); }
-  .player-tile.mafia-mark { border-color: var(--red); }
-  .player-avatar {
-    font-size: 2rem;
-    margin-bottom: 8px;
-    display: block;
-  }
-  .player-name-tile {
-    font-size: 0.9rem;
-    color: var(--white);
-    font-weight: 400;
-  }
-  .player-status-badge {
-    position: absolute;
-    top: -6px; right: -6px;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    font-size: 0.7rem;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  /* ===== LOG ===== */
-  .game-log {
-    background: rgba(0,0,0,0.4);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 8px;
-    padding: 16px;
-    max-height: 220px;
-    overflow-y: auto;
-    font-size: 0.9rem;
-    line-height: 1.8;
-  }
-  .game-log::-webkit-scrollbar { width: 4px; }
-  .game-log::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
-  .game-log::-webkit-scrollbar-thumb { background: var(--red); border-radius: 2px; }
-  .log-entry { padding: 2px 0; }
-  .log-entry.night { color: #9b82cc; }
-  .log-entry.day { color: var(--gold); }
-  .log-entry.death { color: var(--red2); }
-  .log-entry.save { color: var(--green2); }
-  .log-entry.reveal { color: var(--blue2); }
-  .log-entry.system { color: var(--muted); font-style: italic; }
-
-  /* ===== VOTE TABLE ===== */
-  .vote-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
-    transition: all 0.2s;
-  }
-  .vote-row:hover:not(.dead-row) { border-color: rgba(212,168,83,0.2); }
-  .vote-row.dead-row { opacity: 0.3; }
-  .vote-count {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--red2);
-    min-width: 30px;
-    text-align: center;
-  }
-  .vote-bar {
-    flex: 1;
-    height: 6px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 3px;
-    margin: 0 12px;
-    overflow: hidden;
-  }
-  .vote-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--red), var(--red2));
-    border-radius: 3px;
-    transition: width 0.5s ease;
-  }
-
-  /* ===== RESULT SCREEN ===== */
-  .result-banner {
-    text-align: center;
-    padding: 60px 20px;
-    position: relative;
-  }
-  .result-banner h2 {
-    font-size: clamp(2rem, 6vw, 4rem);
-    margin-bottom: 12px;
-  }
-  .win-mafia h2 { color: var(--red2); text-shadow: 0 0 30px rgba(231,76,60,0.5); }
-  .win-citizens h2 { color: var(--blue2); text-shadow: 0 0 30px rgba(93,173,226,0.5); }
-
-  /* ===== TABS ===== */
-  .tabs {
-    display: flex;
-    gap: 4px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 8px;
-    padding: 4px;
-    margin-bottom: 20px;
-  }
-  .tab {
-    flex: 1;
-    padding: 10px;
-    text-align: center;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: 'Crimson Pro', serif;
-    font-size: 0.95rem;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    transition: all 0.2s;
-  }
-  .tab.active { background: var(--card); color: var(--white); border: 1px solid var(--border); }
-
-  /* ===== INFO BOX ===== */
-  .info-box {
-    background: rgba(0,0,0,0.3);
-    border-left: 3px solid var(--gold);
-    padding: 12px 16px;
-    border-radius: 0 6px 6px 0;
-    margin: 12px 0;
-    font-size: 0.95rem;
-    line-height: 1.7;
-    color: rgba(240,230,211,0.85);
-  }
-  .info-box.danger { border-left-color: var(--red2); }
-  .info-box.success { border-left-color: var(--green2); }
-  .info-box.info { border-left-color: var(--blue2); }
-
-  /* ===== MODAL ===== */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    backdrop-filter: blur(4px);
-    animation: fadeIn 0.2s ease;
-  }
-  .modal {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 32px;
-    max-width: 480px;
-    width: 90%;
-    position: relative;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-    text-align: center;
-  }
-  .modal h3 { font-size: 1.5rem; margin-bottom: 12px; }
-  .modal p { color: rgba(240,230,211,0.8); line-height: 1.7; margin-bottom: 20px; }
-
-  /* ===== STATS BAR ===== */
-  .stats-bar {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-  .stat-chip {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px;
-    font-size: 0.85rem;
-  }
-  .stat-chip .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-  }
-  .dot-alive { background: var(--green2); }
-  .dot-dead { background: var(--red2); }
-  .dot-mafia { background: var(--red); }
-  .dot-citizen { background: var(--blue2); }
-
-  /* ===== NIGHT ACTION PANEL ===== */
-  .night-action {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(100,60,180,0.2);
-    border-radius: 8px;
-    padding: 20px;
-    margin: 16px 0;
-  }
-  .night-action h4 {
-    color: #bb9de8;
-    font-size: 1rem;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* ===== ROLE LEGEND ===== */
-  .role-legend {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
-    margin-top: 16px;
-  }
-  .legend-card {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    padding: 14px;
-    background: rgba(255,255,255,0.03);
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.05);
-    transition: border-color 0.2s;
-  }
-  .legend-card:hover { border-color: var(--border); }
-  .legend-icon { font-size: 1.8rem; flex-shrink: 0; }
-  .legend-info h4 { font-size: 1rem; margin-bottom: 4px; }
-  .legend-info p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
-  .legend-team {
-    font-size: 0.72rem;
-    padding: 2px 8px;
-    border-radius: 10px;
-    display: inline-block;
-    margin-bottom: 4px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-  }
-  .team-mafia { background: rgba(192,57,43,0.3); color: var(--red2); }
-  .team-city { background: rgba(41,128,185,0.3); color: var(--blue2); }
-
-  /* Helpers */
-  .flex { display: flex; }
-  .gap-8 { gap: 8px; }
-  .gap-12 { gap: 12px; }
-  .flex-wrap { flex-wrap: wrap; }
-  .justify-center { justify-content: center; }
-  .justify-between { justify-content: space-between; }
-  .items-center { align-items: center; }
-  .mt-8 { margin-top: 8px; }
-  .mt-12 { margin-top: 12px; }
-  .mt-16 { margin-top: 16px; }
-  .mt-24 { margin-top: 24px; }
-  .mb-8 { margin-bottom: 8px; }
-  .mb-12 { margin-bottom: 12px; }
-  .mb-16 { margin-bottom: 16px; }
-  .mb-20 { margin-bottom: 20px; }
-  .text-center { text-align: center; }
-  .text-gold { color: var(--gold); }
-  .text-red { color: var(--red2); }
-  .text-muted { color: var(--muted); }
-  .text-sm { font-size: 0.85rem; }
-  .text-italic { font-style: italic; }
-  .section-title {
-    font-size: 1.1rem;
-    color: var(--gold);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    font-family: 'Playfair Display', serif;
-    margin-bottom: 12px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-  }
-  .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border), transparent);
-    margin: 20px 0;
-  }
-  .hidden { display: none !important; }
-
-  /* ===== CONFETTI ===== */
-  .confetti-piece {
-    position: fixed;
-    width: 8px; height: 8px;
-    border-radius: 2px;
-    animation: confettiFall linear forwards;
-    pointer-events: none;
-    z-index: 200;
-  }
-  @keyframes confettiFall {
-    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-  }
-
-  /* ===== PULSE ANIMATION ===== */
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-  }
-  .pulse { animation: pulse 2s infinite; }
-
-  /* ===== SCROLL ===== */
-  .scroll-area { max-height: 400px; overflow-y: auto; padding-right: 4px; }
-  .scroll-area::-webkit-scrollbar { width: 4px; }
-  .scroll-area::-webkit-scrollbar-track { background: transparent; }
-  .scroll-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  /* Night overlay */
-  .night-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(5, 0, 20, 0.92);
-    z-index: 50;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    animation: fadeIn 0.8s ease;
-  }
-  .night-overlay h2 { font-size: 3rem; color: #9b82cc; text-shadow: 0 0 30px rgba(155,130,204,0.5); }
-  .night-overlay p { color: rgba(240,230,211,0.6); text-align: center; max-width: 400px; line-height: 1.7; }
-
-  .section-separator {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 24px 0 16px;
-  }
-  .section-separator span {
-    font-family: 'Playfair Display', serif;
-    font-size: 0.9rem;
-    color: var(--gold);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-  .section-separator::before, .section-separator::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
+:root {
+  --bg:#0a0705;--card:#1a1410;--red:#c0392b;--red2:#e74c3c;
+  --gold:#d4a853;--gold2:#f0c060;--blue:#2980b9;--blue2:#5dade2;
+  --green:#27ae60;--green2:#52be80;--purple:#8e44ad;--orange:#e67e22;
+  --white:#f0e6d3;--muted:#8a7a6a;--border:rgba(212,168,83,0.2);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--white);font-family:'Crimson Pro',Georgia,serif;font-size:16px;min-height:100vh}
+h1,h2,h3{font-family:'Playfair Display',serif}
+.screen{display:none;min-height:100vh;padding:16px;max-width:900px;margin:0 auto;animation:fadeIn 0.4s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.game-header{text-align:center;padding:28px 20px 14px}
+.game-title{font-size:clamp(2.2rem,8vw,4.5rem);font-weight:900;color:var(--red2);text-shadow:0 0 40px rgba(192,57,43,0.5)}
+.game-subtitle{font-size:0.9rem;color:var(--gold);letter-spacing:0.3em;text-transform:uppercase;font-style:italic;margin-top:4px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:11px 24px;border:none;border-radius:4px;font-family:'Crimson Pro',serif;font-size:1rem;cursor:pointer;transition:all 0.2s;letter-spacing:0.04em}
+.btn-primary{background:var(--red);color:var(--white);box-shadow:0 4px 16px rgba(192,57,43,0.35)}
+.btn-primary:hover{background:var(--red2);transform:translateY(-1px)}
+.btn-secondary{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.btn-secondary:hover{background:rgba(212,168,83,0.1)}
+.btn-ghost{background:rgba(255,255,255,0.05);color:var(--white);border:1px solid rgba(255,255,255,0.1)}
+.btn-ghost:hover{background:rgba(255,255,255,0.1)}
+.btn-lg{padding:14px 36px;font-size:1.15rem}
+.btn-sm{padding:7px 14px;font-size:0.88rem}
+.btn-full{width:100%;justify-content:center}
+.btn:disabled{opacity:0.35;cursor:not-allowed;transform:none!important}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px;position:relative;overflow:hidden;margin-bottom:14px}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0.35}
+input[type=text],input[type=number],select{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:var(--white);padding:8px 12px;font-family:'Crimson Pro',serif;font-size:1rem;outline:none;transition:border-color 0.2s}
+input:focus,select:focus{border-color:var(--gold)}
+select option{background:#1a1410}
+.section-title{font-size:1rem;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;font-family:'Playfair Display',serif;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.info-box{background:rgba(0,0,0,0.3);border-left:3px solid var(--gold);padding:10px 14px;border-radius:0 6px 6px 0;margin:8px 0;font-size:0.92rem;line-height:1.65;color:rgba(240,230,211,0.85)}
+.info-box.danger{border-left-color:var(--red2)}
+.info-box.success{border-left-color:var(--green2)}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:14px 0}
+.hidden{display:none!important}
+.flex{display:flex}.gap-8{gap:8px}.gap-12{gap:12px}.flex-wrap{flex-wrap:wrap}
+.justify-center{justify-content:center}.items-center{align-items:center}
+.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}
+.text-center{text-align:center}.text-gold{color:var(--gold)}.text-red{color:var(--red2)}.text-muted{color:var(--muted)}.text-sm{font-size:0.85rem}.text-italic{font-style:italic}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:600px){.setup-grid{grid-template-columns:1fr}}
+.player-row{display:flex;gap:8px;align-items:center;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.05);margin-bottom:7px}
+.player-num{width:26px;height:26px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0}
+.role-cfg{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.role-cfg:last-child{border-bottom:none}
+.count-btn{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.2s}
+.count-btn:hover{background:rgba(212,168,83,0.2);border-color:var(--gold)}
+.count-disp{width:28px;text-align:center;font-size:1rem;font-weight:700;color:var(--gold)}
+.phase-banner{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border-radius:8px;margin-bottom:16px;font-size:1.2rem;font-weight:700;font-family:'Playfair Display',serif}
+.phase-night{background:linear-gradient(135deg,#0d0820,#120a2a);border:1px solid rgba(100,60,180,0.3);color:#bb9de8}
+.phase-day{background:linear-gradient(135deg,#1a1200,#261a00);border:1px solid rgba(212,168,83,0.3);color:var(--gold)}
+.phase-vote{background:linear-gradient(135deg,#1a0505,#260808);border:1px solid rgba(192,57,43,0.3);color:var(--red2)}
+.phase-defense{background:linear-gradient(135deg,#0a1a18,#0e1f1d);border:1px solid rgba(22,160,133,0.3);color:#48c9b0}
+.players-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin:14px 0}
+.ptile{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:13px 9px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;user-select:none}
+.ptile:hover:not(.dead):not(.disabled){border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 14px rgba(212,168,83,0.2)}
+.ptile.selected{border-color:var(--red2);background:rgba(192,57,43,0.15);box-shadow:0 0 18px rgba(192,57,43,0.3)}
+.ptile.dead{opacity:0.25;cursor:not-allowed;filter:grayscale(1)}
+.ptile.disabled{cursor:not-allowed;opacity:0.4}
+.ptile.defense-candidate{border-color:#48c9b0;box-shadow:0 0 12px rgba(72,201,176,0.3)}
+.p-avatar{font-size:1.8rem;margin-bottom:5px;display:block}
+.p-name{font-size:0.82rem;color:var(--white)}
+.stats-bar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.stat-chip{display:flex;align-items:center;gap:5px;padding:5px 11px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);border-radius:20px;font-size:0.8rem}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-alive{background:var(--green2)}.dot-dead{background:var(--red2)}.dot-mafia{background:var(--red)}.dot-city{background:var(--blue2)}
+.tabs{display:flex;gap:3px;background:rgba(0,0,0,0.3);border-radius:8px;padding:3px;margin-bottom:14px}
+.tab{flex:1;padding:9px;text-align:center;border-radius:6px;cursor:pointer;font-family:'Crimson Pro',serif;font-size:0.92rem;border:none;background:transparent;color:var(--muted);transition:all 0.2s}
+.tab.active{background:var(--card);color:var(--white);border:1px solid var(--border)}
+.game-log{background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:14px;max-height:240px;overflow-y:auto;font-size:0.88rem;line-height:1.75}
+.game-log::-webkit-scrollbar{width:3px}
+.game-log::-webkit-scrollbar-thumb{background:var(--red);border-radius:2px}
+.log-night{color:#9b82cc}.log-day{color:var(--gold)}.log-death{color:var(--red2)}.log-save{color:var(--green2)}.log-reveal{color:var(--blue2)}.log-system{color:var(--muted);font-style:italic}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:480px;width:92%;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.6);text-align:center}
+.modal h3{font-size:1.4rem;margin-bottom:10px}
+.modal p{color:rgba(240,230,211,0.8);line-height:1.7;margin-bottom:14px}
+.night-action{background:rgba(0,0,0,0.3);border:1px solid rgba(100,60,180,0.2);border-radius:8px;padding:16px;margin:12px 0}
+.night-action h4{color:#bb9de8;font-size:1rem;margin-bottom:10px}
+.vote-row{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-radius:6px;margin-bottom:7px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);transition:all 0.2s;cursor:pointer}
+.vote-row:hover:not(.no-hover){border-color:rgba(212,168,83,0.2)}
+.vote-count{font-size:1.1rem;font-weight:700;color:var(--red2);min-width:26px;text-align:center}
+.vote-bar{flex:1;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;margin:0 10px;overflow:hidden}
+.vote-bar-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--red2));border-radius:3px;transition:width 0.4s ease}
+.role-card{max-width:340px;margin:0 auto;text-align:center;padding:34px 24px;border-radius:12px;border:2px solid;position:relative}
+.role-card-icon{font-size:4.5rem;margin-bottom:13px;display:block}
+.role-card-name{font-size:1.8rem;font-weight:700;margin-bottom:6px}
+.role-card-player{font-size:0.93rem;color:var(--muted);margin-bottom:15px;font-style:italic}
+.role-card-desc{font-size:0.93rem;line-height:1.7}
+.role-card-ability{margin-top:13px;padding:10px;border-radius:6px;background:rgba(0,0,0,0.3);font-size:0.87rem;font-style:italic;color:var(--gold)}
+.role-mafia{border-color:var(--red);background:linear-gradient(135deg,#1a0a0a,#220e0e)}
+.role-ajan{border-color:var(--red);background:linear-gradient(135deg,#1a0a0a,#220e0e)}
+.role-citizen{border-color:var(--blue);background:linear-gradient(135deg,#0a0f1a,#0e1522)}
+.role-komissar{border-color:var(--gold);background:linear-gradient(135deg,#1a1500,#221c00)}
+.role-doktor{border-color:var(--green);background:linear-gradient(135deg,#0a1a0f,#0e2215)}
+.role-melek{border-color:var(--purple);background:linear-gradient(135deg,#130a1a,#1c0e22)}
+.role-kamikaze{border-color:var(--orange);background:linear-gradient(135deg,#1a1000,#221500)}
+.legend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-top:12px}
+.legend-card{display:flex;gap:10px;align-items:flex-start;padding:11px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.05)}
+.legend-icon{font-size:1.5rem;flex-shrink:0}
+.legend-info h4{font-size:0.92rem;margin-bottom:3px}
+.legend-info p{font-size:0.78rem;color:var(--muted);line-height:1.4}
+.team-badge{font-size:0.68rem;padding:2px 7px;border-radius:10px;display:inline-block;margin-bottom:3px;font-weight:700;letter-spacing:0.04em}
+.team-mafia{background:rgba(192,57,43,0.3);color:var(--red2)}
+.team-city{background:rgba(41,128,185,0.3);color:var(--blue2)}
+.result-banner{text-align:center;padding:50px 20px}
+.win-mafia h2{color:var(--red2);text-shadow:0 0 30px rgba(231,76,60,0.5)}
+.win-citizens h2{color:var(--blue2);text-shadow:0 0 30px rgba(93,173,226,0.5)}
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;animation:confettiFall linear forwards;pointer-events:none;z-index:200}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+.scroll-area{max-height:360px;overflow-y:auto;padding-right:4px}
+.scroll-area::-webkit-scrollbar{width:3px}
+.scroll-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.current-voter-box{background:rgba(212,168,83,0.1);border:1px solid rgba(212,168,83,0.3);border-radius:8px;padding:12px 16px;margin-bottom:12px;text-align:center}
+.current-voter-name{font-size:1.3rem;font-weight:700;color:var(--gold)}
 </style>
 </head>
 <body>
 
-<!-- ==================== SCREEN: WELCOME ==================== -->
+<!-- WELCOME -->
 <div id="screen-welcome" class="screen active">
   <div class="game-header">
     <h1 class="game-title">MAFİYA</h1>
     <p class="game-subtitle">Baku Underground • İctimai Oyun</p>
   </div>
-
-  <div class="mt-24 mb-20">
+  <div class="mt-16">
     <div class="card">
       <p class="section-title">Oyun haqqında</p>
-      <p style="line-height:1.8; color:rgba(240,230,211,0.85);">
-        Mafia — gizli rollar üzərindən qurulan sosial strategiya oyunudur. Oyunçular iki qrupa bölünür: 
-        <span class="text-red">Mafia</span> (gizli cinayətkarlar) və <span style="color:var(--blue2)">Vətəndaşlar</span> 
-        (şəhəri qorumağa çalışanlar). Gecə mafia hücum edir, gündüz isə bütün oyunçular birlikdə müzakirə edib 
-        bir nəfəri linç etmək üçün səs verirlər.
-      </p>
+      <p style="line-height:1.8;color:rgba(240,230,211,0.85)">Mafia — gizli rollar üzərindən qurulan sosial strategiya oyunudur. <span style="color:var(--red2)">Mafia</span> şəhəri ələ keçirməyə, <span style="color:var(--blue2)">Vətəndaşlar</span> isə mafiyanı tapmağa çalışır.</p>
     </div>
   </div>
-
-  <div class="section-separator"><span>Rollar</span></div>
-  <div class="role-legend">
-    <div class="legend-card">
-      <span class="legend-icon">🔫</span>
-      <div class="legend-info">
-        <span class="legend-team team-mafia">MAFİYA</span>
-        <h4>Mafioz</h4>
-        <p>Gecə digər mafiozlarla birgə bir nəfəri öldürlür. Kim olduqları gizlidir.</p>
-      </div>
-    </div>
-    <div class="legend-card">
-      <span class="legend-icon">👤</span>
-      <div class="legend-info">
-        <span class="legend-team team-city">ŞƏHƏRLİLƏR</span>
-        <h4>Vətəndaş</h4>
-        <p>Xüsusi güc yoxdur. Gündüz müzakirəyə iştirak edir, mafiyanı tapmağa çalışır.</p>
-      </div>
-    </div>
-    <div class="legend-card">
-      <span class="legend-icon">🔍</span>
-      <div class="legend-info">
-        <span class="legend-team team-city">ŞƏHƏRLİLƏR</span>
-        <h4>Komissar</h4>
-        <p>Gecə bir oyunçunun rolunu yoxlayır — mafia, yoxsa şəhərli olduğunu öyrənir.</p>
-      </div>
-    </div>
-    <div class="legend-card">
-      <span class="legend-icon">💊</span>
-      <div class="legend-info">
-        <span class="legend-team team-city">ŞƏHƏRLİLƏR</span>
-        <h4>Doktor</h4>
-        <p>Gecə bir oyunçunu mafiya hücumundan qoruyur (özünü də qoruya bilər, amma bir gecə üstüstə 2 dəfə yox).</p>
-      </div>
-    </div>
-    <div class="legend-card">
-      <span class="legend-icon">😇</span>
-      <div class="legend-info">
-        <span class="legend-team team-city">ŞƏHƏRLİLƏR</span>
-        <h4>Mələk</h4>
-        <p>Öldürüldükdə, seçdiyi bir oyunçunu da öldürür — intiqam gücü. Bunu əvvəlcədən açıqlamır.</p>
-      </div>
-    </div>
-    <div class="legend-card">
-      <span class="legend-icon">💥</span>
-      <div class="legend-info">
-        <span class="legend-team team-city">ŞƏHƏRLİLƏR</span>
-        <h4>Kamikaze</h4>
-        <p>Linç ediləndə bütün oyunçuların rolunu üzə çıxarır — güclü sürpriz effekti.</p>
-      </div>
-    </div>
-    <div class="legend-card">
-      <span class="legend-icon">🕵️</span>
-      <div class="legend-info">
-        <span class="legend-team team-mafia">MAFİYA</span>
-        <h4>Mafiya Ajanı</h4>
-        <p>Mafia üzvüdür, amma kommissar yoxladığında "şəhərli" kimi görünür.</p>
-      </div>
-    </div>
+  <div class="divider"></div>
+  <p class="section-title text-center">Rollar</p>
+  <div class="legend-grid">
+    <div class="legend-card"><span class="legend-icon">🔫</span><div class="legend-info"><span class="team-badge team-mafia">MAFİYA</span><h4>Mafioz</h4><p>Gecə bir oyunçunu öldürür.</p></div></div>
+    <div class="legend-card"><span class="legend-icon">🕵️</span><div class="legend-info"><span class="team-badge team-mafia">MAFİYA</span><h4>Mafiya Ajanı</h4><p>Komissar yoxladıqda şəhərli görünür.</p></div></div>
+    <div class="legend-card"><span class="legend-icon">👤</span><div class="legend-info"><span class="team-badge team-city">ŞƏHƏRLİLƏR</span><h4>Vətəndaş</h4><p>Müzakirə edib mafiyanı tapır.</p></div></div>
+    <div class="legend-card"><span class="legend-icon">🔍</span><div class="legend-info"><span class="team-badge team-city">ŞƏHƏRLİLƏR</span><h4>Komissar</h4><p>Gecə bir oyunçunun rolunu yoxlayır.</p></div></div>
+    <div class="legend-card"><span class="legend-icon">💊</span><div class="legend-info"><span class="team-badge team-city">ŞƏHƏRLİLƏR</span><h4>Doktor</h4><p>Gecə birini ölümdən qoruyur.</p></div></div>
+    <div class="legend-card"><span class="legend-icon">😇</span><div class="legend-info"><span class="team-badge team-city">ŞƏHƏRLİLƏR</span><h4>Mələk</h4><p>Öldürüldüqdə intiqam hədəfini seçir.</p></div></div>
+    <div class="legend-card"><span class="legend-icon">💥</span><div class="legend-info"><span class="team-badge team-city">ŞƏHƏRLİLƏR</span><h4>Kamikaze</h4><p>Linç olarsa seçdiyi birini özü ilə aparır.</p></div></div>
   </div>
-
-  <div class="section-separator"><span>Oyun qaydaları</span></div>
-  <div class="card mb-20">
-    <div class="info-box">🌙 <strong>Gecə mərhələsi:</strong> Moderator "Hamı gözlərini yumsun" deyir. Sırayla hər xüsusi rol oyanıb öz hərəkətini edir.</div>
-    <div class="info-box">☀️ <strong>Gündüz mərhələsi:</strong> Gecənin nəticəsi açıqlanır. Oyunçular 3-5 dəqiqə müzakirə edir, sonra şübhəli birinə səs verirlər.</div>
-    <div class="info-box danger">⚖️ <strong>Linç:</strong> Ən çox səs alan oyunçu oyundan çıxır. Bərabərlik olduqda heç kim çıxmır.</div>
-    <div class="info-box success">🏆 <strong>Qaliblər:</strong> Mafia — şəhərli sayı mafia sayına bərabər və ya az olanda qalib gəlir. Şəhərlilər — bütün mafiozları məhv etdikdə qalib gəlir.</div>
+  <div class="divider"></div>
+  <div class="card">
+    <p class="section-title">Oyun Qaydaları</p>
+    <div class="info-box">🌙 <strong>Gecə:</strong> Mafia → Doktor → Komissar sırayla hərəkət edir.</div>
+    <div class="info-box">☀️ <strong>Müzakirə:</strong> Hamı danışır, şübhəlilər müəyyənləşdirilir.</div>
+    <div class="info-box">⚖️ <strong>Səsvermə:</strong> Hər oyunçu sıra ilə 1 səs verir. 2+ səs alan müdafiəyə çıxır.</div>
+    <div class="info-box danger">🛡 <strong>Müdafiə:</strong> Müdafiəyə çıxanlar danışır, sonra yenidən 1 dəfəlik səs verilir. Ən çox alan linç edilir.</div>
+    <div class="info-box success">🏆 <strong>Qaliblər:</strong> Mafia — canlı şəhərli ≤ mafia. Şəhərlilər — bütün mafia məhv edilir.</div>
   </div>
-
-  <div class="flex justify-center mt-24 mb-20">
-    <button class="btn btn-primary btn-lg" onclick="showScreen('screen-setup')">
-      🎮 Oyuna Başla
-    </button>
+  <div class="flex justify-center mt-20 mb-16">
+    <button class="btn btn-primary btn-lg" onclick="showScreen('screen-setup')">🎮 Oyuna Başla</button>
   </div>
 </div>
 
-<!-- ==================== SCREEN: SETUP ==================== -->
+<!-- SETUP -->
 <div id="screen-setup" class="screen">
-  <div class="game-header">
-    <h1 class="game-title" style="font-size:2rem">Oyunçu Quraşdırması</h1>
-  </div>
-
+  <div class="game-header"><h1 class="game-title" style="font-size:2rem">Quraşdırma</h1></div>
   <div class="setup-grid">
-    <!-- LEFT: Players -->
     <div>
       <div class="card">
-        <div class="section-title">Oyunçular</div>
+        <p class="section-title">Oyunçular</p>
         <div class="flex items-center gap-8 mb-16">
-          <label style="color:var(--muted); font-size:0.9rem">Oyunçu sayı:</label>
-          <input type="number" id="playerCount" value="8" min="5" max="20" style="width:70px" onchange="updatePlayerInputs()">
-          <button class="btn btn-ghost btn-sm" onclick="fillRandomNames()">🎲 Təsadüfi adlar</button>
+          <label style="color:var(--muted);font-size:0.9rem">Say:</label>
+          <input type="number" id="playerCount" value="8" min="5" max="20" style="width:65px" onchange="updateSetup()">
+          <button class="btn btn-ghost btn-sm" onclick="fillRandom()">🎲 Təsadüfi</button>
         </div>
         <div id="player-inputs" class="scroll-area"></div>
       </div>
     </div>
-
-    <!-- RIGHT: Roles -->
     <div>
       <div class="card">
-        <div class="section-title">Rol Paylanması</div>
-        <div id="role-config-area"></div>
+        <p class="section-title">Rol Paylanması</p>
+        <div id="role-config"></div>
         <div class="divider"></div>
         <div id="role-summary" class="info-box"></div>
       </div>
     </div>
   </div>
-
-  <div class="flex justify-center gap-12 mt-24 mb-20 flex-wrap">
+  <div class="flex justify-center gap-12 mt-20 mb-16 flex-wrap">
     <button class="btn btn-ghost" onclick="showScreen('screen-welcome')">← Geri</button>
     <button class="btn btn-primary btn-lg" onclick="startGame()">🃏 Rolları Paylat</button>
   </div>
 </div>
 
-<!-- ==================== SCREEN: ROLE REVEAL ==================== -->
+<!-- REVEAL -->
 <div id="screen-reveal" class="screen">
-  <div class="game-header">
-    <h1 class="game-title" style="font-size:2rem">🃏 Rol Aşkarlanması</h1>
-    <p class="game-subtitle">Hər oyunçu növbə ilə öz roluna baxır</p>
-  </div>
-
-  <div class="card mt-24 mb-16 text-center">
-    <p style="color:var(--muted); font-size:0.95rem; margin-bottom:12px">Sıradakı oyunçu:</p>
-    <h2 id="reveal-player-name" style="font-size:1.8rem; color:var(--gold)">—</h2>
+  <div class="game-header"><h1 class="game-title" style="font-size:2rem">🃏 Rol Aşkarlanması</h1><p class="game-subtitle">Hər oyunçu növbə ilə öz roluna baxır</p></div>
+  <div class="card mt-16 mb-12 text-center">
+    <p style="color:var(--muted);font-size:0.92rem;margin-bottom:9px">Sıradakı oyunçu:</p>
+    <h2 id="reveal-name" style="font-size:1.7rem;color:var(--gold)">—</h2>
     <p class="text-sm text-muted text-italic mt-8" id="reveal-progress"></p>
   </div>
-
-  <div id="reveal-card-area" class="text-center">
-    <button class="btn btn-primary btn-lg" id="btn-show-role" onclick="showCurrentRole()">
-      👁 Rolumu Gör
-    </button>
-    <div id="actual-role-card" class="hidden mt-16">
-      <!-- role card injected here -->
-    </div>
-    <div id="btn-next-wrap" class="hidden mt-16">
-      <button class="btn btn-secondary" onclick="nextReveal()">Növbəti Oyunçu →</button>
-    </div>
+  <div id="reveal-area" class="text-center">
+    <button class="btn btn-primary btn-lg" id="btn-show-role" onclick="showRole()">👁 Rolumu Gör</button>
+    <div id="role-card-wrap" class="hidden mt-16"></div>
+    <div id="btn-next-wrap" class="hidden mt-16"></div>
   </div>
 </div>
 
-<!-- ==================== SCREEN: GAME ==================== -->
+<!-- GAME -->
 <div id="screen-game" class="screen">
   <div id="phase-banner" class="phase-banner"></div>
-
   <div class="stats-bar" id="stats-bar"></div>
-
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('tab-main')" id="tab-btn-main">🎮 Oyun</button>
-    <button class="tab" onclick="switchTab('tab-log')" id="tab-btn-log">📜 Tarix</button>
-    <button class="tab" onclick="switchTab('tab-rules')" id="tab-btn-rules">📖 Qaydalar</button>
+    <button class="tab active" onclick="switchTab('main')" id="tab-btn-main">🎮 Oyun</button>
+    <button class="tab" onclick="switchTab('log')" id="tab-btn-log">📜 Tarix</button>
+    <button class="tab" onclick="switchTab('rules')" id="tab-btn-rules">📖 Qaydalar</button>
   </div>
-
-  <!-- TAB: MAIN -->
   <div id="tab-main">
-    <div id="game-instructions" class="info-box mb-16"></div>
+    <div id="game-instr" class="info-box mb-12"></div>
     <div id="players-grid" class="players-grid"></div>
-    <div id="action-panel" class="mt-16"></div>
-    <div class="flex gap-8 flex-wrap mt-16" id="phase-buttons"></div>
+    <div id="action-panel" class="mt-12"></div>
+    <div class="flex gap-8 flex-wrap mt-12" id="phase-btns"></div>
   </div>
-
-  <!-- TAB: LOG -->
   <div id="tab-log" class="hidden">
-    <div class="section-title">Oyun Tarixi</div>
+    <p class="section-title">Oyun Tarixi</p>
     <div id="full-log" class="game-log" style="max-height:500px"></div>
   </div>
-
-  <!-- TAB: RULES -->
   <div id="tab-rules" class="hidden">
     <div class="card">
-      <div class="section-title">Sürətli Qaydalar Xatırlatması</div>
-      <div class="info-box">🌙 <strong>Gecə:</strong> Mafia → Doktor → Komissar → Mələk (ölüb-ölmədiyinə görə) sırayla aktivdir.</div>
-      <div class="info-box">☀️ <strong>Gündüz:</strong> Ölüm açıqlanır → 3-5 dəq müzakirə → Səsvermə → Linç</div>
-      <div class="info-box danger">💥 <strong>Kamikaze linç olarsa:</strong> Moderator bütün rolları açıqlayır, oyun davam edir.</div>
-      <div class="info-box success">😇 <strong>Mələk öldürülsə:</strong> Mələk öz "intiqam" hədəfini seçir, o da ölür.</div>
-      <div class="info-box info">🔍 <strong>Komissar:</strong> Öğrendiyi məlumatı digərlərinə bildirə bilər (risk: mafia onu tanıyar).</div>
-    </div>
-    <div class="role-legend mt-16">
-      <div class="legend-card">
-        <span class="legend-icon">🔫</span>
-        <div class="legend-info">
-          <span class="legend-team team-mafia">MAFİYA</span>
-          <h4>Mafioz</h4>
-          <p>Gecə birini öldürür. Bütün mafiozlar bir-birini tanıyır.</p>
-        </div>
-      </div>
-      <div class="legend-card">
-        <span class="legend-icon">🕵️</span>
-        <div class="legend-info">
-          <span class="legend-team team-mafia">MAFİYA</span>
-          <h4>Mafiya Ajanı</h4>
-          <p>Kommissar yoxladığında şəhərli görünür. Mafia üzvüdür.</p>
-        </div>
-      </div>
-      <div class="legend-card">
-        <span class="legend-icon">👤</span>
-        <div class="legend-info">
-          <span class="legend-team team-city">ŞƏHƏRLİLƏR</span>
-          <h4>Vətəndaş</h4>
-          <p>Xüsusi güc yoxdur. Müzakirə edir.</p>
-        </div>
-      </div>
-      <div class="legend-card">
-        <span class="legend-icon">🔍</span>
-        <div class="legend-info">
-          <span class="legend-team team-city">ŞƏHƏRLİLƏR</span>
-          <h4>Komissar</h4>
-          <p>Gecə bir oyunçunun rolunu yoxlayır.</p>
-        </div>
-      </div>
-      <div class="legend-card">
-        <span class="legend-icon">💊</span>
-        <div class="legend-info">
-          <span class="legend-team team-city">ŞƏHƏRLİLƏR</span>
-          <h4>Doktor</h4>
-          <p>Gecə bir nəfəri ölümdən qoruyur.</p>
-        </div>
-      </div>
-      <div class="legend-card">
-        <span class="legend-icon">😇</span>
-        <div class="legend-info">
-          <span class="legend-team team-city">ŞƏHƏRLİLƏR</span>
-          <h4>Mələk</h4>
-          <p>Öldürüldüyündə intiqam hədəfini öldürür.</p>
-        </div>
-      </div>
-      <div class="legend-card">
-        <span class="legend-icon">💥</span>
-        <div class="legend-info">
-          <span class="legend-team team-city">ŞƏHƏRLİLƏR</span>
-          <h4>Kamikaze</h4>
-          <p>Linç olarsa bütün rollar açıqlanır.</p>
-        </div>
-      </div>
+      <p class="section-title">Qaydalar Xatırlatması</p>
+      <div class="info-box">🌙 <strong>Gecə sırası:</strong> Mafia → Doktor → Komissar</div>
+      <div class="info-box">☀️ <strong>Müzakirə:</strong> Oyunçular danışır, şübhəlilər müəyyənləşir</div>
+      <div class="info-box">⚖️ <strong>Səsvermə:</strong> Sıra ilə hər oyunçu 1 səs verir. 2+ alan müdafiəyə çıxır</div>
+      <div class="info-box danger">🛡 <strong>Müdafiə:</strong> Müdafiəyə çıxanlar danışır → yenidən səs → ən çox alan linç edilir</div>
+      <div class="info-box">💥 <strong>Kamikaze:</strong> Linç olarsa seçdiyi birini özü ilə aparır</div>
+      <div class="info-box">😇 <strong>Mələk:</strong> Mafia öldürərsə intiqam hədəfi seçir</div>
     </div>
   </div>
 </div>
 
-<!-- ==================== SCREEN: RESULT ==================== -->
+<!-- RESULT -->
 <div id="screen-result" class="screen">
   <div id="result-content"></div>
 </div>
 
-<!-- ==================== MODAL ==================== -->
-<div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal()">
-  <div class="modal" onclick="event.stopPropagation()">
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay hidden" onclick="closeModalOutside(event)">
+  <div class="modal">
     <div id="modal-content"></div>
-    <button class="btn btn-ghost btn-sm" onclick="closeModal()">Bağla</button>
+    <button class="btn btn-ghost btn-sm mt-12" onclick="closeModal()">Bağla</button>
   </div>
 </div>
 
 <script>
-// ============================================================
-//  GAME STATE
-// ============================================================
-const ROLES = {
-  mafia:    { name: 'Mafioz',      icon: '🔫', team: 'mafia',   color: '#c0392b', desc: 'Gecə digər mafiozlarla birgə bir nəfəri öldürlürsünüz. Gündüz şübhəni özünüzdən uzaqlaşdırın.', ability: '⚡ Gecəlik: Bir oyunçunu öldür' },
-  ajan:     { name: 'Mafiya Ajanı',icon: '🕵️', team: 'mafia',   color: '#c0392b', desc: 'Mafia üzvüsünüz, amma komissar sizi yoxladıqda "şəhərli" kimi görünürsünüz. Mükəmməl kamuflaj.', ability: '⚡ Passiv: Kommissar yoxlamasına davamlı' },
-  citizen:  { name: 'Vətəndaş',   icon: '👤', team: 'city',    color: '#2980b9', desc: 'Xüsusi gücünüz yoxdur. Lakin müzakirə bacarığınız ən güclü silahınızdır. Mafiyanı tapın!', ability: '⚡ Gündüz: Aktiv müzakirə və səsvermə' },
-  komissar: { name: 'Komissar',    icon: '🔍', team: 'city',    color: '#d4a853', desc: 'Gecə istənilən oyunçunun rolunu yoxlaya bilərsiniz. Mafia yoxsa şəhərli — cavabı öyrənirsiniz.', ability: '⚡ Gecəlik: Bir oyunçunun rolunu yoxla' },
-  doktor:   { name: 'Doktor',      icon: '💊', team: 'city',    color: '#27ae60', desc: 'Gecə bir oyunçunu mafiya hücumundan qoruyursunuz. Özünüzü də qoruya bilərsiniz, amma 2 gecə üstüstə yox.', ability: '⚡ Gecəlik: Bir oyunçunu mafiyadan qoru' },
-  melek:    { name: 'Mələk',       icon: '😇', team: 'city',    color: '#8e44ad', desc: 'Mafia tərəfindən öldürülsəniz, intiqam olaraq bir oyunçunu da öldürürsünüz. Bunu əvvəlcədən açıqlamırsınız.', ability: '⚡ Ölüm anında: İntiqam hədəfini seç' },
-  kamikaze: { name: 'Kamikaze',    icon: '💥', team: 'city',    color: '#e67e22', desc: 'Əgər linç edilsəniz, bütün oyunçuların gizli rolları açıqlanır. Möhtəşəm taktiki silah!', ability: '⚡ Linçdə: Bütün rolları açıqla' },
+const ROLES={
+  mafia:   {name:'Mafioz',     icon:'🔫',team:'mafia',color:'#c0392b',desc:'Gecə digər mafiozlarla birgə bir nəfəri öldürlürsünüz.',ability:'⚡ Gecəlik: Bir oyunçunu öldür'},
+  ajan:    {name:'Mafiya Ajanı',icon:'🕵️',team:'mafia',color:'#c0392b',desc:'Mafia üzvüsünüz, amma komissar yoxladıqda şəhərli görünürsünüz.',ability:'⚡ Passiv: Kommissar yoxlamasına davamlı'},
+  citizen: {name:'Vətəndaş',   icon:'👤',team:'city', color:'#2980b9',desc:'Xüsusi gücünüz yoxdur. Müzakirə bacarığınız ən güclü silahınızdır.',ability:'⚡ Gündüz: Aktiv müzakirə və səsvermə'},
+  komissar:{name:'Komissar',   icon:'🔍',team:'city', color:'#d4a853',desc:'Gecə istənilən oyunçunun rolunu yoxlaya bilərsiniz.',ability:'⚡ Gecəlik: Bir oyunçunun rolunu yoxla'},
+  doktor:  {name:'Doktor',     icon:'💊',team:'city', color:'#27ae60',desc:'Gecə bir oyunçunu mafiya hücumundan qoruyursunuz.',ability:'⚡ Gecəlik: Bir oyunçunu mafiyadan qoru'},
+  melek:   {name:'Mələk',      icon:'😇',team:'city', color:'#8e44ad',desc:'Mafia tərəfindən öldürülsəniz, intiqam olaraq bir nəfəri də öldürürsünüz.',ability:'⚡ Ölümdə: İntiqam hədəfini seç'},
+  kamikaze:{name:'Kamikaze',   icon:'💥',team:'city', color:'#e67e22',desc:'Linç edilsəniz, özünüz bir nəfəri seçib onunla aparırsınız!',ability:'⚡ Linçdə: Bir nəfəri seçib özünlə apar'},
+};
+const AVATARS=['🧔','👩','🧕','👨','👱','👧','🧑','👩‍🦱','👨‍🦳','👩‍🦰','🧔‍♀️','👴','👵','🧒','👱‍♀️','🧑‍🦱'];
+const NAMES=['Əli','Nigar','Rauf','Aytən','Kamran','Lalə','Murad','Sevinc','Elnur','Günel','Tural','Nərmin','Orxan','Xədicə','Bəhruz','Şəbnəm'];
+
+let G={
+  players:[],round:1,phase:'night',nightStep:0,
+  mafiaTarget:null,doctorSave:null,lastDoctorSelf:false,selectedAction:null,
+  votes:{},hasVoted:{},voterQueue:[],voterQueueIdx:0,
+  defenseVotes:{},defenseHasVoted:{},defVoterQueue:[],defVoterQueueIdx:0,
+  defCandidates:[],
+  revealIdx:0,
+  roleCounts:{mafia:2,ajan:0,komissar:1,doktor:1,melek:1,kamikaze:1},
+  log:[],
 };
 
-const AVATARS = ['🧔','👩','🧕','👨','👱','👧','🧑','👩‍🦱','👨‍🦳','👩‍🦰','🧔‍♀️','👴','👵','🧒','👱‍♀️'];
-const RANDOM_NAMES = ['Əli','Nigar','Rauf','Aytən','Kamran','Lalə','Murad','Sevinc','Elnur','Günel','Tural','Nərmin','Orxan','Xədicə','Bəhruz','Şəbnəm'];
+// NAV
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function switchTab(t){['main','log','rules'].forEach(x=>{document.getElementById('tab-'+x).classList.toggle('hidden',x!==t);document.getElementById('tab-btn-'+x).classList.toggle('active',x===t);});}
 
-let state = {
-  players: [],
-  round: 1,
-  phase: 'night', // night | day | vote
-  nightTarget: null,
-  doctorSave: null,
-  kommissarCheck: null,
-  mafiaTarget: null,
-  angelTarget: null,
-  lastDoctorSelf: false,
-  votes: {},
-  log: [],
-  revealIndex: 0,
-  roleCounts: { mafia:2, ajan:0, komissar:1, doktor:1, melek:1, kamikaze:1 },
-  nightStep: 0, // 0=mafia, 1=doktor, 2=komissar
-  selectedForAction: null,
-  kamikazeId: null,
-  angelId: null,
-};
-
-// ============================================================
-//  NAVIGATION
-// ============================================================
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
+// SETUP
+function updateSetup(){
+  const n=+document.getElementById('playerCount').value||8;
+  const c=document.getElementById('player-inputs');
+  const cur=c.querySelectorAll('input').length;
+  for(let i=cur;i<n;i++) c.innerHTML+=`<div class="player-row"><div class="player-num">${i+1}</div><input type="text" placeholder="Oyunçu ${i+1}" id="pn-${i}" style="flex:1"></div>`;
+  const rows=c.querySelectorAll('.player-row');
+  for(let i=n;i<rows.length;i++) rows[i].remove();
+  renderRoleConfig(n);
 }
-
-function switchTab(tab) {
-  ['tab-main','tab-log','tab-rules'].forEach(t => {
-    document.getElementById(t).classList.toggle('hidden', t !== tab);
-  });
-  ['tab-btn-main','tab-btn-log','tab-btn-rules'].forEach(btn => {
-    document.getElementById(btn).classList.toggle('active', btn === 'tab-btn-' + tab.replace('tab-',''));
-  });
+function fillRandom(){
+  const n=+document.getElementById('playerCount').value||8;
+  const sh=[...NAMES].sort(()=>Math.random()-0.5);
+  for(let i=0;i<n;i++){const el=document.getElementById(`pn-${i}`);if(el)el.value=sh[i%sh.length];}
 }
-
-// ============================================================
-//  SETUP SCREEN
-// ============================================================
-function updatePlayerInputs() {
-  const count = parseInt(document.getElementById('playerCount').value) || 8;
-  const container = document.getElementById('player-inputs');
-  const current = container.querySelectorAll('input').length;
-  // add
-  for(let i = current; i < count; i++) {
-    container.innerHTML += `
-      <div class="player-input-row">
-        <div class="player-num">${i+1}</div>
-        <input type="text" placeholder="Oyunçu ${i+1}" id="pname-${i}">
-      </div>`;
-  }
-  // remove
-  const rows = container.querySelectorAll('.player-input-row');
-  for(let i = count; i < rows.length; i++) rows[i].remove();
-  updateRoleConfig();
-}
-
-function fillRandomNames() {
-  const count = parseInt(document.getElementById('playerCount').value) || 8;
-  const shuffled = [...RANDOM_NAMES].sort(()=>Math.random()-0.5);
-  for(let i=0;i<count;i++) {
-    const inp = document.getElementById(`pname-${i}`);
-    if(inp) inp.value = shuffled[i % shuffled.length];
-  }
-}
-
-function updateRoleConfig() {
-  const count = parseInt(document.getElementById('playerCount').value) || 8;
-  const area = document.getElementById('role-config-area');
-  const roles = [
-    { key:'mafia',    label:'Mafioz',       icon:'🔫', desc:'Mafia qrupu', min:1 },
-    { key:'ajan',     label:'Mafiya Ajanı', icon:'🕵️', desc:'Gizli mafia, şəhərli görünür', min:0 },
-    { key:'komissar', label:'Komissar',     icon:'🔍', desc:'Gecə rol yoxlayır', min:0 },
-    { key:'doktor',   label:'Doktor',       icon:'💊', desc:'Gecə qoruyur', min:0 },
-    { key:'melek',    label:'Mələk',        icon:'😇', desc:'Ölümdə intiqam alır', min:0 },
-    { key:'kamikaze', label:'Kamikaze',     icon:'💥', desc:'Linçdə bütün rolları açır', min:0 },
+function renderRoleConfig(n){
+  const defs=[
+    {key:'mafia',label:'Mafioz',icon:'🔫',desc:'Mafia qrupu'},
+    {key:'ajan',label:'Mafiya Ajanı',icon:'🕵️',desc:'Gizli mafia'},
+    {key:'komissar',label:'Komissar',icon:'🔍',desc:'Rol yoxlayır'},
+    {key:'doktor',label:'Doktor',icon:'💊',desc:'Gecə qoruyur'},
+    {key:'melek',label:'Mələk',icon:'😇',desc:'Ölümdə intiqam'},
+    {key:'kamikaze',label:'Kamikaze',icon:'💥',desc:'Linçdə aparır'},
   ];
-
-  area.innerHTML = roles.map(r => `
-    <div class="role-config">
-      <div class="role-label">
-        <span class="role-icon">${r.icon}</span>
-        <div>
-          <div class="role-name">${r.label}</div>
-          <div class="role-desc">${r.desc}</div>
-        </div>
+  document.getElementById('role-config').innerHTML=defs.map(r=>`
+    <div class="role-cfg">
+      <div class="flex items-center gap-8"><span style="font-size:1.3rem">${r.icon}</span><div><div style="font-size:0.92rem">${r.label}</div><div class="text-sm text-muted">${r.desc}</div></div></div>
+      <div class="flex items-center gap-8">
+        <button class="count-btn" onclick="chRole('${r.key}',-1)">−</button>
+        <span class="count-disp" id="rc-${r.key}">${G.roleCounts[r.key]}</span>
+        <button class="count-btn" onclick="chRole('${r.key}',1)">+</button>
       </div>
-      <div class="role-count-ctrl">
-        <button class="count-btn" onclick="changeRole('${r.key}',-1)">−</button>
-        <span class="count-display" id="rc-${r.key}">${state.roleCounts[r.key]}</span>
-        <button class="count-btn" onclick="changeRole('${r.key}',1)">+</button>
-      </div>
-    </div>
-  `).join('');
-  updateRoleSummary(count);
+    </div>`).join('');
+  updateRoleSummary(n);
 }
-
-function changeRole(key, delta) {
-  const count = parseInt(document.getElementById('playerCount').value) || 8;
-  state.roleCounts[key] = Math.max(0, state.roleCounts[key] + delta);
-  document.getElementById('rc-' + key).textContent = state.roleCounts[key];
-  updateRoleSummary(count);
+function chRole(k,d){G.roleCounts[k]=Math.max(0,G.roleCounts[k]+d);document.getElementById('rc-'+k).textContent=G.roleCounts[k];updateRoleSummary(+document.getElementById('playerCount').value||8);}
+function updateRoleSummary(n){
+  const rc=G.roleCounts;const special=Object.values(rc).reduce((a,b)=>a+b,0);const citizens=n-special;const mT=rc.mafia+rc.ajan;const box=document.getElementById('role-summary');
+  if(citizens<0){box.className='info-box danger';box.innerHTML=`❌ Rol sayı çox! ${Math.abs(citizens)} azalt.`;}
+  else if(mT===0){box.className='info-box danger';box.innerHTML='❌ Ən azı 1 mafioz lazımdır!';}
+  else{box.className='info-box success';box.innerHTML=`✅ ${n} oyunçu: <strong>${mT} Mafia</strong>, <strong>${n-mT} Şəhərli</strong> (${citizens} Vətəndaş)`;}
 }
+function initSetup(){updateSetup();}
 
-function updateRoleSummary(count) {
-  const rc = state.roleCounts;
-  const special = rc.mafia + rc.ajan + rc.komissar + rc.doktor + rc.melek + rc.kamikaze;
-  const citizens = count - special;
-  const mafiaTotal = rc.mafia + rc.ajan;
-  const box = document.getElementById('role-summary');
-
-  if(citizens < 0) {
-    box.className = 'info-box danger';
-    box.innerHTML = `❌ Rol sayı oyunçu sayını aşır! ${Math.abs(citizens)} rol azaldın.`;
-  } else if(mafiaTotal === 0) {
-    box.className = 'info-box danger';
-    box.innerHTML = `❌ Ən azı 1 mafioz olmalıdır!`;
-  } else {
-    box.className = 'info-box success';
-    box.innerHTML = `✅ ${count} oyunçu: <strong>${mafiaTotal} Mafia</strong>, <strong>${count - mafiaTotal} Şəhərli</strong> (${citizens} Vətəndaş + ${special - mafiaTotal} xüsusi rol)`;
-  }
-}
-
-function initSetup() {
-  updatePlayerInputs();
-  updateRoleConfig();
-}
-
-// ============================================================
-//  START GAME → ASSIGN ROLES
-// ============================================================
-function startGame() {
-  const count = parseInt(document.getElementById('playerCount').value) || 8;
-  const rc = state.roleCounts;
-  const special = rc.mafia + rc.ajan + rc.komissar + rc.doktor + rc.melek + rc.kamikaze;
-  const citizens = count - special;
-  const mafiaTotal = rc.mafia + rc.ajan;
-
-  if(citizens < 0) { alert('Rol sayı çox! Azaltın.'); return; }
-  if(mafiaTotal === 0) { alert('Ən azı 1 mafioz olmalıdır!'); return; }
-
-  // Build role pool
-  let pool = [];
+// START — FISHER-YATES SHUFFLE
+function startGame(){
+  const n=+document.getElementById('playerCount').value||8;
+  const rc=G.roleCounts;const special=Object.values(rc).reduce((a,b)=>a+b,0);const citizens=n-special;const mT=rc.mafia+rc.ajan;
+  if(citizens<0){alert('Rol sayı çox!');return;}if(mT===0){alert('Ən azı 1 mafioz!');return;}
+  let pool=[];
   for(let i=0;i<rc.mafia;i++) pool.push('mafia');
   for(let i=0;i<rc.ajan;i++) pool.push('ajan');
   for(let i=0;i<rc.komissar;i++) pool.push('komissar');
@@ -1103,667 +341,420 @@ function startGame() {
   for(let i=0;i<rc.melek;i++) pool.push('melek');
   for(let i=0;i<rc.kamikaze;i++) pool.push('kamikaze');
   for(let i=0;i<citizens;i++) pool.push('citizen');
-  pool.sort(()=>Math.random()-0.5);
-
-  // Build players
-  state.players = [];
-  for(let i=0;i<count;i++) {
-    const nameEl = document.getElementById(`pname-${i}`);
-    const name = (nameEl && nameEl.value.trim()) || `Oyunçu ${i+1}`;
-    state.players.push({
-      id: i,
-      name,
-      role: pool[i],
-      avatar: AVATARS[i % AVATARS.length],
-      alive: true,
-      protected: false,
-    });
+  // ★ Fisher-Yates tam təsadüfi
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  G.players=[];const usedAv=[];
+  for(let i=0;i<n;i++){
+    const nm=(document.getElementById(`pn-${i}`)?.value.trim())||`Oyunçu ${i+1}`;
+    let av;do{av=AVATARS[Math.floor(Math.random()*AVATARS.length)];}while(usedAv.includes(av)&&usedAv.length<AVATARS.length);usedAv.push(av);
+    G.players.push({id:i,name:nm,role:pool[i],avatar:av,alive:true});
   }
-
-  state.round = 1;
-  state.phase = 'night';
-  state.log = [];
-  state.revealIndex = 0;
-  state.nightStep = 0;
-  state.votes = {};
-  state.mafiaTarget = null;
-  state.doctorSave = null;
-  state.kommissarCheck = null;
-  state.lastDoctorSelf = false;
-  state.selectedForAction = null;
-  state.kamikazeId = state.players.find(p=>p.role==='kamikaze')?.id ?? null;
-  state.angelId = state.players.find(p=>p.role==='melek')?.id ?? null;
-
-  addLog('system', `Oyun başladı. ${count} oyunçu, ${mafiaTotal} mafioz.`);
-  showScreen('screen-reveal');
-  showRevealScreen();
+  G.round=1;G.phase='night';G.nightStep=0;G.log=[];G.mafiaTarget=null;G.doctorSave=null;G.lastDoctorSelf=false;G.selectedAction=null;
+  G.votes={};G.hasVoted={};G.voterQueue=[];G.voterQueueIdx=0;
+  G.defenseVotes={};G.defenseHasVoted={};G.defVoterQueue=[];G.defVoterQueueIdx=0;G.defCandidates=[];G.revealIdx=0;
+  addLog('system',`Oyun başladı. ${n} oyunçu, ${mT} mafioz.`);
+  showScreen('screen-reveal');showReveal();
 }
 
-// ============================================================
-//  ROLE REVEAL
-// ============================================================
-function showRevealScreen() {
-  state.revealIndex = 0;
-  showRevealForCurrent();
-}
-
-function showRevealForCurrent() {
-  const p = state.players[state.revealIndex];
-  document.getElementById('reveal-player-name').textContent = p.name;
-  document.getElementById('reveal-progress').textContent = `${state.revealIndex + 1} / ${state.players.length}`;
+// REVEAL
+function showReveal(){
+  const p=G.players[G.revealIdx];
+  document.getElementById('reveal-name').textContent=p.name;
+  document.getElementById('reveal-progress').textContent=`${G.revealIdx+1} / ${G.players.length}`;
   document.getElementById('btn-show-role').classList.remove('hidden');
-  document.getElementById('actual-role-card').classList.add('hidden');
+  document.getElementById('role-card-wrap').classList.add('hidden');
   document.getElementById('btn-next-wrap').classList.add('hidden');
-  document.getElementById('actual-role-card').innerHTML = '';
+  document.getElementById('role-card-wrap').innerHTML='';
 }
-
-function showCurrentRole() {
-  const p = state.players[state.revealIndex];
-  const r = ROLES[p.role];
-  const cardClass = `role-${p.role === 'ajan' ? 'ajan' : p.role}`;
-
-  // Find mafia teammates
-  let extra = '';
-  if(p.role === 'mafia' || p.role === 'ajan') {
-    const allies = state.players.filter(x => (x.role==='mafia'||x.role==='ajan') && x.id !== p.id);
-    if(allies.length) extra = `<div class="role-card-ability" style="color:var(--red2)">🤝 Mafia yoldaşlar: ${allies.map(a=>a.name).join(', ')}</div>`;
-  }
-
-  document.getElementById('actual-role-card').innerHTML = `
-    <div class="role-card ${cardClass}" style="border-color:${r.color}; max-width:360px; margin:0 auto">
+function showRole(){
+  const p=G.players[G.revealIdx];const r=ROLES[p.role];
+  let extra='';
+  if(p.role==='mafia'||p.role==='ajan'){const allies=G.players.filter(x=>(x.role==='mafia'||x.role==='ajan')&&x.id!==p.id);if(allies.length)extra=`<div class="role-card-ability" style="color:var(--red2)">🤝 Mafia yoldaşlar: ${allies.map(a=>a.name).join(', ')}</div>`;}
+  document.getElementById('role-card-wrap').innerHTML=`
+    <div class="role-card role-${p.role}" style="border-color:${r.color}">
       <span class="role-card-icon">${r.icon}</span>
       <div class="role-card-name" style="color:${r.color}">${r.name}</div>
       <div class="role-card-player">${p.name}</div>
       <div class="role-card-desc">${r.desc}</div>
       <div class="role-card-ability">${r.ability}</div>
       ${extra}
-    </div>
-  `;
-
+    </div>`;
   document.getElementById('btn-show-role').classList.add('hidden');
-  document.getElementById('actual-role-card').classList.remove('hidden');
+  document.getElementById('role-card-wrap').classList.remove('hidden');
   document.getElementById('btn-next-wrap').classList.remove('hidden');
-
-  const isLast = state.revealIndex === state.players.length - 1;
-  document.getElementById('btn-next-wrap').innerHTML = isLast
-    ? `<button class="btn btn-primary btn-lg" onclick="enterGame()">🌙 Oyuna Başla →</button>`
-    : `<button class="btn btn-secondary" onclick="nextReveal()">Növbəti Oyunçu →</button>`;
+  const isLast=G.revealIdx===G.players.length-1;
+  document.getElementById('btn-next-wrap').innerHTML=isLast
+    ?`<button class="btn btn-primary btn-lg" onclick="enterGame()">🌙 Oyuna Başla →</button>`
+    :`<button class="btn btn-secondary" onclick="nextReveal()">Növbəti →</button>`;
 }
+function nextReveal(){G.revealIdx++;showReveal();}
+function enterGame(){showScreen('screen-game');G.phase='night';G.nightStep=0;renderGame();}
 
-function nextReveal() {
-  state.revealIndex++;
-  if(state.revealIndex >= state.players.length) { enterGame(); return; }
-  showRevealForCurrent();
+// RENDER
+function renderGame(){renderBanner();renderStats();renderGrid();renderAction();renderLog();}
+
+function renderBanner(){
+  const b=document.getElementById('phase-banner');
+  const map={
+    night:['phase-night',`🌙 Gecə ${G.round} — ${['Mafia','Doktor','Komissar'][G.nightStep]||''} hərəkəti`],
+    discuss:['phase-day',`☀️ Gündüz ${G.round} — Müzakirə`],
+    vote:['phase-vote',`⚖️ Gündüz ${G.round} — Səsvermə`],
+    defense:['phase-defense',`🛡 Gündüz ${G.round} — Müdafiə`],
+    'defense-vote':['phase-vote',`⚖️ Gündüz ${G.round} — Final Səsvermə`],
+  };
+  const[cls,txt]=map[G.phase]||['phase-day','—'];
+  b.className='phase-banner '+cls;b.innerHTML=txt;
 }
-
-// ============================================================
-//  ENTER GAME
-// ============================================================
-function enterGame() {
-  showScreen('screen-game');
-  state.phase = 'night';
-  state.nightStep = 0;
-  renderGame();
+function renderStats(){
+  const bar=document.getElementById('stats-bar');
+  const alive=G.players.filter(p=>p.alive).length;const dead=G.players.length-alive;
+  const mA=G.players.filter(p=>p.alive&&(p.role==='mafia'||p.role==='ajan')).length;
+  bar.innerHTML=`<div class="stat-chip"><span class="dot dot-alive"></span>Canlı: ${alive}</div><div class="stat-chip"><span class="dot dot-dead"></span>Ölü: ${dead}</div><div class="stat-chip"><span class="dot dot-mafia"></span>Mafia: ${mA}</div><div class="stat-chip">🔄 Tur: ${G.round}</div>`;
 }
-
-// ============================================================
-//  RENDER
-// ============================================================
-function renderGame() {
-  renderPhaseBanner();
-  renderStats();
-  renderPlayerGrid();
-  renderActionPanel();
-  renderLog();
-  checkWin();
-}
-
-function renderPhaseBanner() {
-  const banner = document.getElementById('phase-banner');
-  if(state.phase === 'night') {
-    banner.className = 'phase-banner phase-night';
-    const steps = ['Mafia hərəkəti', 'Doktor hərəkəti', 'Komissar hərəkəti'];
-    banner.innerHTML = `🌙 Gecə ${state.round} — ${steps[state.nightStep] || 'Gecə'}`;
-  } else if(state.phase === 'day') {
-    banner.className = 'phase-banner phase-day';
-    banner.innerHTML = `☀️ Gündüz ${state.round} — Müzakirə`;
-  } else {
-    banner.className = 'phase-banner phase-vote';
-    banner.innerHTML = `⚖️ Gündüz ${state.round} — Səsvermə`;
-  }
-}
-
-function renderStats() {
-  const bar = document.getElementById('stats-bar');
-  const alive = state.players.filter(p=>p.alive).length;
-  const dead = state.players.length - alive;
-  const mafiaAlive = state.players.filter(p=>p.alive && (p.role==='mafia'||p.role==='ajan')).length;
-  const cityAlive = alive - mafiaAlive;
-
-  bar.innerHTML = `
-    <div class="stat-chip"><span class="dot dot-alive"></span> Canlı: ${alive}</div>
-    <div class="stat-chip"><span class="dot dot-dead"></span> Ölü: ${dead}</div>
-    <div class="stat-chip"><span class="dot dot-mafia"></span> Mafia (canlı): ${mafiaAlive}</div>
-    <div class="stat-chip"><span class="dot dot-citizen"></span> Şəhərlilər (canlı): ${cityAlive}</div>
-    <div class="stat-chip">🔄 Tur: ${state.round}</div>
-  `;
-}
-
-function renderPlayerGrid() {
-  const grid = document.getElementById('players-grid');
-  grid.innerHTML = state.players.map(p => {
-    let cls = 'player-tile';
-    if(!p.alive) cls += ' dead';
-    if(p.protected && p.alive) cls += ' protected';
-    if(state.selectedForAction === p.id && p.alive) cls += ' selected';
-
-    const badge = p.protected && p.alive ? '<div class="player-status-badge" style="background:var(--green)">🛡</div>' : '';
-
-    return `
-      <div class="${cls}" onclick="selectPlayer(${p.id})" id="ptile-${p.id}">
-        ${badge}
-        <span class="player-avatar">${p.avatar}</span>
-        <div class="player-name-tile">${p.name}</div>
-        ${!p.alive ? '<div style="font-size:0.7rem;color:var(--red2);margin-top:4px">ÖLÜ</div>' : ''}
-      </div>
-    `;
+function renderGrid(){
+  const grid=document.getElementById('players-grid');
+  grid.innerHTML=G.players.map(p=>{
+    let cls='ptile';if(!p.alive)cls+=' dead';if(G.selectedAction===p.id&&p.alive)cls+=' selected';if(G.phase==='defense'&&G.defCandidates.includes(p.id)&&p.alive)cls+=' defense-candidate';
+    return `<div class="${cls}" onclick="selectPlayer(${p.id})" id="ptile-${p.id}">
+      <span class="p-avatar">${p.avatar}</span><div class="p-name">${p.name}</div>
+      ${!p.alive?'<div style="font-size:0.68rem;color:var(--red2);margin-top:3px">ÖLÜ</div>':''}
+    </div>`;
   }).join('');
 }
+function selectPlayer(id){
+  const p=G.players.find(x=>x.id===id);if(!p||!p.alive)return;
+  if(G.phase==='night'){G.selectedAction=id;renderGrid();enableConfirm();}
+  else if(G.phase==='vote'){castVote(id);}
+  else if(G.phase==='defense-vote'){castDefenseVote(id);}
+}
+function enableConfirm(){['btn-confirm-mafia','btn-confirm-doc','btn-confirm-kom'].forEach(b=>{const el=document.getElementById(b);if(el)el.disabled=false;});}
 
-function renderActionPanel() {
-  const panel = document.getElementById('action-panel');
-  const btns = document.getElementById('phase-buttons');
-  const instr = document.getElementById('game-instructions');
+// ACTION PANEL
+function renderAction(){
+  const panel=document.getElementById('action-panel');const btns=document.getElementById('phase-btns');const instr=document.getElementById('game-instr');
+  if(G.phase==='night') renderNightPanel(panel,btns,instr);
+  else if(G.phase==='discuss') renderDiscussPanel(panel,btns,instr);
+  else if(G.phase==='vote') renderVotePanel(panel,btns,instr);
+  else if(G.phase==='defense') renderDefensePanel(panel,btns,instr);
+  else if(G.phase==='defense-vote') renderDefVotePanel(panel,btns,instr);
+}
 
-  if(state.phase === 'night') {
-    if(state.nightStep === 0) {
-      // MAFIA
-      instr.className = 'info-box danger mb-16';
-      instr.innerHTML = `🔫 <strong>Mafia:</strong> Mafia üzvləri (${getMafiaNames()}) yuxuya getmiş oyunçulardan birini seçirlər. Moderator: mafiozların göstərdiyi şəxsi qeyd et.`;
-
-      panel.innerHTML = `
-        <div class="night-action">
-          <h4>🔫 Mafia Hədəfi</h4>
-          <p class="text-sm text-muted mb-12">Aşağıdan mafiya hücum edəcəyi oyunçunu seç:</p>
-          <div id="action-players"></div>
-        </div>
-      `;
-      renderActionPlayers(p => p.alive && p.role !== 'mafia' && p.role !== 'ajan');
-
-      btns.innerHTML = `
-        <button class="btn btn-primary" onclick="confirmMafiaKill()" id="btn-confirm-mafia" disabled>
-          🔫 Hücumu Təsdiqlə
-        </button>
-      `;
-
-    } else if(state.nightStep === 1) {
-      // DOKTOR
-      const doc = state.players.find(p=>p.role==='doktor' && p.alive);
-      if(!doc) { state.nightStep = 2; renderGame(); return; }
-
-      instr.className = 'info-box success mb-16';
-      instr.innerHTML = `💊 <strong>Doktor (${doc.name}):</strong> Bir oyunçunu bu gecə mafiya hücumundan qoruyur. Özünü seçə bilər, amma iki gecə üstüstə özünü qorumaq olmaz.`;
-
-      panel.innerHTML = `
-        <div class="night-action">
-          <h4>💊 Doktor — Kim qorunsun?</h4>
-          <div id="action-players"></div>
-        </div>
-      `;
-      renderActionPlayers(p => {
-        if(!p.alive) return false;
-        if(p.id === doc.id && state.lastDoctorSelf) return false;
-        return true;
-      });
-
-      btns.innerHTML = `
-        <button class="btn btn-secondary" onclick="skipDoctor()">Keç (bu gecə heç kimi qorutma)</button>
-        <button class="btn btn-primary" onclick="confirmDoktorSave()" id="btn-confirm-doc" disabled>
-          💊 Qorumanı Təsdiqlə
-        </button>
-      `;
-
-    } else if(state.nightStep === 2) {
-      // KOMİSSAR
-      const kom = state.players.find(p=>p.role==='komissar' && p.alive);
-      if(!kom) { resolveNight(); return; }
-
-      instr.className = 'info-box mb-16';
-      instr.style.borderLeftColor = '#d4a853';
-      instr.innerHTML = `🔍 <strong>Komissar (${kom.name}):</strong> Bir oyunçunun rolunu yoxlayır — mafia yoxsa şəhərli?`;
-
-      panel.innerHTML = `
-        <div class="night-action">
-          <h4>🔍 Komissar — Kimi yoxla?</h4>
-          <div id="action-players"></div>
-        </div>
-      `;
-      renderActionPlayers(p => p.alive && p.id !== kom.id);
-
-      btns.innerHTML = `
-        <button class="btn btn-ghost" onclick="skipKomissar()">Keç</button>
-        <button class="btn btn-primary" onclick="confirmKomissarCheck()" id="btn-confirm-kom" disabled>
-          🔍 Yoxlamağı Təsdiqlə
-        </button>
-      `;
-    }
-
-  } else if(state.phase === 'day') {
-    instr.className = 'info-box mb-16';
-    instr.style.borderLeftColor = 'var(--gold)';
-    instr.innerHTML = `☀️ <strong>Müzakirə mərhələsi:</strong> Oyunçular 3-5 dəqiqə söhbət edir. Kim mafia ola bilər? Şübhəlilər haqda danışın. Hazır olduqda səsverməyə keçin.`;
-    panel.innerHTML = '';
-    btns.innerHTML = `<button class="btn btn-primary" onclick="startVoting()">⚖️ Səsverməyə keç</button>`;
-
-  } else if(state.phase === 'vote') {
-    instr.className = 'info-box danger mb-16';
-    instr.innerHTML = `⚖️ <strong>Səsvermə:</strong> Hər oyunçu linç etmək istədiyi şəxsə "səs" verir. Ən çox səs alan oyundan çıxır.`;
-    panel.innerHTML = renderVotePanel();
-    btns.innerHTML = `
-      <button class="btn btn-ghost" onclick="noLynch()">Heç kim linç edilmir</button>
-      <button class="btn btn-primary" onclick="confirmLynch()" id="btn-confirm-lynch" disabled>
-        ⚖️ Linçi Təsdiqlə
-      </button>
-    `;
+// NIGHT
+function renderNightPanel(panel,btns,instr){
+  if(G.nightStep===0){
+    const mNames=G.players.filter(p=>p.alive&&(p.role==='mafia'||p.role==='ajan')).map(p=>p.name).join(', ');
+    instr.className='info-box danger mb-12';instr.style.borderLeftColor='';
+    instr.innerHTML=`🔫 <strong>Mafia (${mNames}):</strong> Hücum ediləcək oyunçunu seçin.`;
+    panel.innerHTML=`<div class="night-action"><h4>🔫 Mafia Hədəfi</h4>${buildActionGrid(p=>p.alive&&p.role!=='mafia'&&p.role!=='ajan')}</div>`;
+    btns.innerHTML=`<button class="btn btn-primary" onclick="confirmMafia()" id="btn-confirm-mafia" disabled>🔫 Hücumu Təsdiqlə</button>`;
+  } else if(G.nightStep===1){
+    const doc=G.players.find(p=>p.role==='doktor'&&p.alive);
+    if(!doc){G.nightStep=2;renderGame();return;}
+    instr.className='info-box mb-12';instr.style.borderLeftColor='var(--green2)';
+    instr.innerHTML=`💊 <strong>Doktor (${doc.name}):</strong> Bu gecə kimi qoruyursunuz?`;
+    panel.innerHTML=`<div class="night-action"><h4>💊 Doktor Qoruması</h4>${buildActionGrid(p=>p.alive&&!(p.id===doc.id&&G.lastDoctorSelf))}</div>`;
+    btns.innerHTML=`<button class="btn btn-ghost btn-sm" onclick="skipDoctor()">Keç</button> <button class="btn btn-primary" onclick="confirmDoctor()" id="btn-confirm-doc" disabled>💊 Qorumanı Təsdiqlə</button>`;
+  } else if(G.nightStep===2){
+    const kom=G.players.find(p=>p.role==='komissar'&&p.alive);
+    if(!kom){resolveNight();return;}
+    instr.className='info-box mb-12';instr.style.borderLeftColor='var(--gold)';
+    instr.innerHTML=`🔍 <strong>Komissar (${kom.name}):</strong> Kimin rolunu yoxlayırsınız?`;
+    panel.innerHTML=`<div class="night-action"><h4>🔍 Komissar Yoxlaması</h4>${buildActionGrid(p=>p.alive&&p.id!==kom.id)}</div>`;
+    btns.innerHTML=`<button class="btn btn-ghost btn-sm" onclick="skipKomissar()">Keç</button> <button class="btn btn-primary" onclick="confirmKomissar()" id="btn-confirm-kom" disabled>🔍 Yoxlamanı Təsdiqlə</button>`;
   }
 }
-
-function getMafiaNames() {
-  return state.players.filter(p=>p.alive && (p.role==='mafia'||p.role==='ajan')).map(p=>p.name).join(', ') || '—';
+function buildActionGrid(filter){
+  return `<div class="players-grid">${G.players.map(p=>{
+    const ok=filter(p);const cls=!ok?'ptile disabled':(G.selectedAction===p.id?'ptile selected':'ptile');
+    return `<div class="${cls}" onclick="${ok?`selAction(${p.id})`:''}"><span class="p-avatar">${p.avatar}</span><div class="p-name">${p.name}</div>${!p.alive?'<div style="font-size:0.68rem;color:var(--red2)">ÖLÜ</div>':''}</div>`;
+  }).join('')}</div>`;
 }
+function selAction(id){G.selectedAction=id;renderAction();enableConfirm();}
 
-function renderActionPlayers(filter) {
-  const container = document.getElementById('action-players');
-  if(!container) return;
-  container.innerHTML = `<div class="players-grid">` +
-    state.players.map(p => {
-      const ok = filter(p);
-      const cls = !ok ? 'player-tile disabled' : (state.selectedForAction === p.id ? 'player-tile selected' : 'player-tile');
-      return `
-        <div class="${cls}" onclick="${ok ? `selectActionPlayer(${p.id})` : ''}">
-          <span class="player-avatar">${p.avatar}</span>
-          <div class="player-name-tile">${p.name}</div>
-          ${!p.alive ? '<div style="font-size:0.7rem;color:var(--red2)">ÖLÜ</div>' : ''}
-        </div>`;
-    }).join('') + '</div>';
+function confirmMafia(){if(G.selectedAction===null)return;G.mafiaTarget=G.selectedAction;G.selectedAction=null;addLog('night','🔫 Mafia hərəkətini etdi.');G.nightStep=1;renderGame();}
+function skipDoctor(){G.doctorSave=null;G.selectedAction=null;G.nightStep=2;renderGame();}
+function confirmDoctor(){
+  if(G.selectedAction===null)return;
+  const doc=G.players.find(p=>p.role==='doktor'&&p.alive);G.lastDoctorSelf=(G.selectedAction===doc?.id);G.doctorSave=G.selectedAction;G.selectedAction=null;
+  addLog('night','💊 Doktor qoruma etdi.');G.nightStep=2;renderGame();
 }
-
-function selectActionPlayer(id) {
-  state.selectedForAction = id;
-  renderActionPlayers(p => {
-    if(state.phase === 'night') {
-      if(state.nightStep === 0) return p.alive && p.role !== 'mafia' && p.role !== 'ajan';
-      if(state.nightStep === 1) {
-        const doc = state.players.find(x=>x.role==='doktor'&&x.alive);
-        return p.alive && !(p.id === doc?.id && state.lastDoctorSelf);
-      }
-      if(state.nightStep === 2) {
-        const kom = state.players.find(x=>x.role==='komissar'&&x.alive);
-        return p.alive && p.id !== kom?.id;
-      }
-    }
-    return p.alive;
-  });
-
-  const btns = ['btn-confirm-mafia','btn-confirm-doc','btn-confirm-kom'];
-  btns.forEach(b => { const el = document.getElementById(b); if(el) el.disabled = false; });
-}
-
-function selectPlayer(id) {
-  if(state.phase !== 'vote') return;
-  const p = state.players.find(x=>x.id===id);
-  if(!p || !p.alive) return;
-  state.selectedForAction = id;
-  renderActionPanel();
-}
-
-// ============================================================
-//  NIGHT ACTIONS
-// ============================================================
-function confirmMafiaKill() {
-  if(state.selectedForAction === null) return;
-  state.mafiaTarget = state.selectedForAction;
-  state.selectedForAction = null;
-  addLog('night', `🔫 Mafia gecə hərəkətini etdi.`);
-  state.nightStep = 1;
-  renderGame();
-}
-
-function skipDoctor() {
-  state.doctorSave = null;
-  state.selectedForAction = null;
-  state.nightStep = 2;
-  renderGame();
-}
-
-function confirmDoktorSave() {
-  if(state.selectedForAction === null) return;
-  const doc = state.players.find(p=>p.role==='doktor'&&p.alive);
-  state.lastDoctorSelf = (state.selectedForAction === doc?.id);
-  state.doctorSave = state.selectedForAction;
-  state.selectedForAction = null;
-  addLog('night', `💊 Doktor qoruma etdi.`);
-  state.nightStep = 2;
-  renderGame();
-}
-
-function skipKomissar() {
-  state.kommissarCheck = null;
-  state.selectedForAction = null;
+function skipKomissar(){G.selectedAction=null;resolveNight();}
+function confirmKomissar(){
+  if(G.selectedAction===null)return;
+  const target=G.players.find(p=>p.id===G.selectedAction);const kom=G.players.find(p=>p.role==='komissar'&&p.alive);
+  const isMafia=target.role==='mafia';const result=isMafia?'🔴 MAFİA':'🟢 ŞƏHƏRLİ';
+  addLog('reveal',`🔍 Komissar ${target.name}: ${result}`);G.selectedAction=null;
+  showModal('🔍 Komissar Nəticəsi',`<p>Komissar <strong>${kom?.name}</strong> bu gecə <strong>${target.name}</strong>-i yoxladı.</p><p style="font-size:1.4rem;margin:12px 0">${result}</p><p class="text-sm text-italic text-muted">Bu məlumatı yalnız komissar bilir.</p>`);
   resolveNight();
 }
 
-function confirmKomissarCheck() {
-  if(state.selectedForAction === null) return;
-  state.kommissarCheck = state.selectedForAction;
-  const target = state.players.find(p=>p.id===state.kommissarCheck);
-  const isMafia = target.role === 'mafia'; // ajan appears as citizen
-  const result = isMafia ? '🔴 MAFİA' : '🟢 ŞƏHƏRLİ';
-  const kom = state.players.find(p=>p.role==='komissar'&&p.alive);
-
-  addLog('reveal', `🔍 Komissar ${target.name} üçün: ${result}`);
-  state.selectedForAction = null;
-
-  showModal(`🔍 Komissar Nəticəsi`, `
-    <p>Komissar <strong>${kom?.name}</strong> bu gecə <strong>${target.name}</strong>-i yoxladı.</p>
-    <p style="font-size:1.5rem; margin:16px 0;">${result}</p>
-    <p class="text-sm text-italic text-muted">Bu məlumatı yalnız komissar bilir. Danışıb-danışmamaq onun seçimidir.</p>
-  `);
-  resolveNight();
+function resolveNight(){
+  const target=G.players.find(p=>p.id===G.mafiaTarget);const saved=G.doctorSave===G.mafiaTarget;
+  if(target&&!saved){
+    target.alive=false;
+    if(target.role==='melek'){addLog('death',`😇 ${target.name} (Mələk) mafia tərəfindən öldürüldü!`);setTimeout(()=>angelRevenge(target.id),400);return;}
+    addLog('death',`💀 ${target.name} gecə öldürüldü. Rolu: ${ROLES[target.role].icon} ${ROLES[target.role].name}`);
+  } else if(target&&saved){addLog('save',`🛡 ${target.name} doktor sayəsində xilas oldu!`);}
+  else{addLog('night','🌙 Bu gecə heç kim öldürülmədi.');}
+  G.mafiaTarget=null;G.doctorSave=null;G.nightStep=0;
+  if(!checkWin()) startDiscuss();
 }
 
-function resolveNight() {
-  const target = state.players.find(p=>p.id===state.mafiaTarget);
-  const saved = state.doctorSave === state.mafiaTarget;
+function angelRevenge(angelId){
+  const alive=G.players.filter(p=>p.alive&&p.id!==angelId);
+  if(!alive.length){afterAngel();return;}
+  showModal('😇 Mələyin İntiqamı',`<p>Mələk ölümdə intiqam alır! Bir oyunçu seçin:</p>
+    <div class="players-grid mt-12">${alive.map(p=>`<div class="ptile" onclick="pickAngel(${p.id})" style="cursor:pointer"><span class="p-avatar">${p.avatar}</span><div class="p-name">${p.name}</div></div>`).join('')}</div>`);
+}
+function pickAngel(id){const t=G.players.find(p=>p.id===id);if(t){t.alive=false;addLog('death',`😇 Mələyin intiqamı: ${t.name} da öldürüldü!`);}closeModal();afterAngel();}
+function afterAngel(){G.mafiaTarget=null;G.doctorSave=null;G.nightStep=0;if(!checkWin())startDiscuss();}
 
-  if(target && !saved) {
-    // Check if angel
-    if(target.role === 'melek') {
-      target.alive = false;
-      addLog('death', `😇 ${target.name} (Mələk) mafia tərəfindən öldürüldü!`);
-      // Angel picks revenge target
-      setTimeout(() => angelRevenge(target.id), 400);
-      return;
-    }
-    target.alive = false;
-    addLog('death', `💀 ${target.name} gecə öldürüldü.`);
-    if(target.role === 'komissar') addLog('system', `⚠️ Komissar öldürüldü!`);
-    if(target.role === 'doktor') addLog('system', `⚠️ Doktor öldürüldü!`);
-  } else if(target && saved) {
-    addLog('save', `🛡 Gecə doktor sayəsində ${target.name} xilas oldu!`);
-    target.protected = true;
-    setTimeout(() => { target.protected = false; }, 3000);
-  } else {
-    addLog('night', `🌙 Bu gecə heç kim öldürülmədi.`);
-  }
+// DISCUSS
+function renderDiscussPanel(panel,btns,instr){
+  instr.className='info-box mb-12';instr.style.borderLeftColor='var(--gold)';
+  instr.innerHTML='☀️ <strong>Müzakirə:</strong> Oyunçular şübhəlilər haqqında danışır. Hazır olduqda səsverməyə keçin.';
+  panel.innerHTML='';btns.innerHTML=`<button class="btn btn-primary" onclick="startVote()">⚖️ Səsverməyə Keç</button>`;
+}
+function startDiscuss(){G.phase='discuss';renderGame();}
 
-  state.mafiaTarget = null;
-  state.doctorSave = null;
-  state.kommissarCheck = null;
-  state.nightStep = 0;
-  state.phase = 'day';
+// VOTE — hər oyunçu sıra ilə 1 səs verir
+function startVote(){
+  G.phase='vote';G.votes={};G.hasVoted={};
+  G.voterQueue=G.players.filter(p=>p.alive).map(p=>p.id);
+  G.voterQueueIdx=0;
+  addLog('day','⚖️ Səsvermə başladı. Hər oyunçu 1 səs verir.');
   renderGame();
 }
 
-// ============================================================
-//  ANGEL REVENGE
-// ============================================================
-function angelRevenge(angelId) {
-  const alive = state.players.filter(p => p.alive && p.id !== angelId);
-  if(!alive.length) { continueAfterAngel(); return; }
-
-  showModal('😇 Mələyin İntiqamı', `
-    <p>Mələk ölümdə intiqam alır! <strong>Bir oyunçu seçin</strong> — mələk onu da özüylə aparır.</p>
-    <div class="players-grid mt-12">
-      ${alive.map(p=>`
-        <div class="player-tile" onclick="pickAngelTarget(${p.id})" id="ang-${p.id}"
-             style="cursor:pointer;transition:all 0.2s">
-          <span class="player-avatar">${p.avatar}</span>
-          <div class="player-name-tile">${p.name}</div>
-        </div>
-      `).join('')}
-    </div>
-  `);
+function getCurrentVoter(){
+  if(G.voterQueueIdx>=G.voterQueue.length)return null;
+  return G.players.find(p=>p.id===G.voterQueue[G.voterQueueIdx])||null;
 }
 
-function pickAngelTarget(id) {
-  const target = state.players.find(p=>p.id===id);
-  if(!target) return;
-  target.alive = false;
-  addLog('death', `😇 Mələyin intiqamı: ${target.name} da öldürüldü!`);
-  closeModal();
-  continueAfterAngel();
-}
+function renderVotePanel(panel,btns,instr){
+  const voter=getCurrentVoter();
+  const total=G.voterQueue.length;
+  const voted=G.voterQueueIdx;
+  const allDone=voted>=total;
 
-function continueAfterAngel() {
-  state.phase = 'day';
-  state.nightStep = 0;
-  state.mafiaTarget = null;
-  state.doctorSave = null;
-  renderGame();
-}
-
-// ============================================================
-//  DAY / VOTE
-// ============================================================
-function startVoting() {
-  state.phase = 'vote';
-  state.votes = {};
-  state.selectedForAction = null;
-  addLog('day', `⚖️ Səsvermə başladı.`);
-  renderGame();
-}
-
-function renderVotePanel() {
-  const alive = state.players.filter(p=>p.alive);
-  return `
-    <div class="card">
-      <div class="section-title">Oy Sayı</div>
-      ${alive.map(p => `
-        <div class="vote-row ${!p.alive?'dead-row':''}" onclick="castVote(${p.id})" style="cursor:pointer">
-          <span>${p.avatar} ${p.name}</span>
-          <div class="vote-bar"><div class="vote-bar-fill" id="vbar-${p.id}" style="width:${getVotePct(p.id)}%"></div></div>
-          <span class="vote-count" id="vcount-${p.id}">${state.votes[p.id]||0}</span>
-          ${state.selectedForAction === p.id ? '<span style="color:var(--red2);font-size:0.8rem">← seçildi</span>' : ''}
-        </div>
-      `).join('')}
-      ${state.selectedForAction !== null ? `<div class="info-box mt-12">
-        Seçilmiş: <strong>${state.players.find(p=>p.id===state.selectedForAction)?.name}</strong>
-        — "Linçi Təsdiqlə" düyməsinə basın
-      </div>` : ''}
-    </div>
-  `;
-}
-
-function getVotePct(id) {
-  const total = Object.values(state.votes).reduce((a,b)=>a+b,0);
-  if(!total) return 0;
-  return Math.round(((state.votes[id]||0)/total)*100);
-}
-
-function castVote(id) {
-  const p = state.players.find(x=>x.id===id);
-  if(!p || !p.alive) return;
-  state.selectedForAction = id;
-  state.votes[id] = (state.votes[id]||0) + 1;
-  const btn = document.getElementById('btn-confirm-lynch');
-  if(btn) btn.disabled = false;
-  renderActionPanel();
-}
-
-function noLynch() {
-  addLog('day', `⚖️ Bu gün linç olmadı. Gecəyə keçildi.`);
-  state.votes = {};
-  state.selectedForAction = null;
-  state.phase = 'night';
-  state.round++;
-  renderGame();
-}
-
-function confirmLynch() {
-  if(state.selectedForAction === null) return;
-  const target = state.players.find(p=>p.id===state.selectedForAction);
-  if(!target || !target.alive) return;
-
-  // Kamikaze?
-  if(target.role === 'kamikaze') {
-    target.alive = false;
-    addLog('death', `💥 ${target.name} (Kamikaze) linç edildi! Bütün rollar açıqlanır!`);
-    revealAllRoles();
+  if(allDone){
+    instr.className='info-box mb-12';instr.style.borderLeftColor='var(--gold)';
+    instr.innerHTML='✅ <strong>Bütün oyunçular səs verdi!</strong> Nəticəyə baxın.';
+    panel.innerHTML=`<div class="card"><p class="section-title">Səsvermə Nəticəsi</p>${buildVoteResults()}</div>`;
+    btns.innerHTML=`<button class="btn btn-primary" onclick="processVoteResult()">⚖️ Nəticəni Tətbiq Et</button>`;
     return;
   }
 
-  target.alive = false;
-  addLog('death', `⚖️ ${target.name} linç edildi! Rolu: ${ROLES[target.role].icon} ${ROLES[target.role].name}`);
-  state.votes = {};
-  state.selectedForAction = null;
+  instr.className='info-box mb-12';instr.style.borderLeftColor='var(--red2)';
+  instr.innerHTML=`⚖️ ${voted}/${total} oyunçu səs verdi.`;
 
-  if(!checkWin()) {
-    state.phase = 'night';
-    state.round++;
-    renderGame();
-  }
-}
-
-function revealAllRoles() {
-  let html = `<h3>💥 Kamikaze Partladı — Bütün Rollar!</h3><p>Bütün gizli rollar aşkarlandı:</p>
-    <div class="players-grid mt-16">
-    ${state.players.map(p=>`
-      <div class="player-tile ${!p.alive?'dead':''}">
-        <span class="player-avatar">${ROLES[p.role].icon}</span>
-        <div class="player-name-tile">${p.name}</div>
-        <div style="font-size:0.75rem; color:${ROLES[p.role].color}; margin-top:4px">${ROLES[p.role].name}</div>
-        ${!p.alive ? '<div style="font-size:0.7rem;color:var(--red2)">ÖLÜ</div>' : ''}
+  const alive=G.players.filter(p=>p.alive);
+  panel.innerHTML=`
+    <div class="card">
+      <div class="current-voter-box">
+        <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Sıradakı oyunçu:</div>
+        <div class="current-voter-name">${voter?.avatar} ${voter?.name}</div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-top:4px">Kimə səs verirsən?</div>
       </div>
-    `).join('')}
+      <div class="players-grid">${alive.map(p=>{
+        const isVoter=voter&&p.id===voter.id;
+        return `<div class="${isVoter?'ptile disabled':'ptile'}" onclick="${isVoter?'':`castVote(${p.id})`}" style="${isVoter?'border-color:var(--gold);opacity:0.5':''}">
+          <span class="p-avatar">${p.avatar}</span><div class="p-name">${p.name}</div>
+          ${isVoter?'<div style="font-size:0.68rem;color:var(--gold)">Sən</div>':''}
+        </div>`;
+      }).join('')}</div>
+      ${voted>0?`<div class="divider"></div><p class="section-title">İndiyə qədər</p>${buildVoteResults()}`:''}
     </div>`;
-
-  showModal('💥 Kamikaze!', html);
-  setTimeout(() => {
-    closeModal();
-    if(!checkWin()) {
-      state.phase = 'night';
-      state.round++;
-      renderGame();
-    }
-  }, 6000);
+  btns.innerHTML=`<button class="btn btn-ghost btn-sm" onclick="skipVote()">⏭ Bu oyunçu yoxdur — keç</button>`;
 }
 
-// ============================================================
-//  WIN CHECK
-// ============================================================
-function checkWin() {
-  const aliveM = state.players.filter(p=>p.alive && (p.role==='mafia'||p.role==='ajan')).length;
-  const aliveC = state.players.filter(p=>p.alive && p.role!=='mafia' && p.role!=='ajan').length;
-
-  if(aliveM === 0) { endGame('city'); return true; }
-  if(aliveM >= aliveC) { endGame('mafia'); return true; }
-  return false;
+function buildVoteResults(){
+  const alive=G.players.filter(p=>p.alive);const total=G.voterQueue.length;
+  return alive.map(p=>{
+    const voters=G.votes[p.id]||[];const cnt=voters.length;const pct=total?Math.round(cnt/total*100):0;
+    const names=voters.map(vid=>G.players.find(x=>x.id===vid)?.name||'').filter(Boolean);
+    return `<div class="vote-row no-hover">
+      <span style="min-width:100px">${p.avatar} ${p.name}</span>
+      <div class="vote-bar"><div class="vote-bar-fill" style="width:${pct}%"></div></div>
+      <span class="vote-count">${cnt}</span>
+    </div>${names.length?`<div style="font-size:0.75rem;color:var(--muted);margin:-5px 0 7px 8px">← ${names.join(', ')}</div>`:''}`;
+  }).join('');
 }
 
-function endGame(winner) {
-  showScreen('screen-result');
-  const isMafia = winner === 'mafia';
-  launchConfetti(isMafia ? '#c0392b' : '#2980b9');
+function castVote(targetId){
+  const voter=getCurrentVoter();if(!voter||voter.id===targetId)return;
+  if(!G.votes[targetId])G.votes[targetId]=[];
+  G.votes[targetId].push(voter.id);G.hasVoted[voter.id]=true;
+  addLog('day',`🗳 ${voter.name} → ${G.players.find(p=>p.id===targetId)?.name}`);
+  G.voterQueueIdx++;renderGame();
+}
+function skipVote(){
+  const voter=getCurrentVoter();if(!voter)return;
+  addLog('day',`🗳 ${voter.name} yox idi — keçildi.`);
+  G.hasVoted[voter.id]=true;G.voterQueueIdx++;renderGame();
+}
 
-  const roleTable = state.players.map(p => `
-    <tr>
-      <td style="padding:8px 12px">${p.avatar} ${p.name}</td>
-      <td style="padding:8px 12px">${ROLES[p.role].icon} ${ROLES[p.role].name}</td>
-      <td style="padding:8px 12px; color:${p.alive?'var(--green2)':'var(--red2)'}">${p.alive?'Canlı':'Ölü'}</td>
-    </tr>
-  `).join('');
+function processVoteResult(){
+  const candidates=[];
+  Object.entries(G.votes).forEach(([tid,voters])=>{if(voters.length>=2)candidates.push(+tid);});
+  if(candidates.length===0){addLog('day','⚖️ Heç kim 2+ səs almadı. Linç olmadı.');goNight();return;}
+  if(candidates.length===1){lynchPlayer(candidates[0]);return;}
+  G.defCandidates=candidates;G.phase='defense';
+  addLog('day',`🛡 Müdafiəyə çıxanlar: ${candidates.map(id=>G.players.find(p=>p.id===id)?.name).join(', ')}`);
+  renderGame();
+}
 
-  document.getElementById('result-content').innerHTML = `
+// DEFENSE
+function renderDefensePanel(panel,btns,instr){
+  const names=G.defCandidates.map(id=>G.players.find(p=>p.id===id)?.name||'').join(', ');
+  instr.className='info-box mb-12';instr.style.borderLeftColor='#48c9b0';
+  instr.innerHTML=`🛡 <strong>Müdafiə:</strong> <strong>${names}</strong> özlərini müdafiə edir. Dinləyin, sonra final səs verin.`;
+  panel.innerHTML=`<div class="card"><p class="section-title">Müdafiəyə Çıxanlar</p>
+    <div class="players-grid">${G.defCandidates.map(id=>{const p=G.players.find(x=>x.id===id);
+      return `<div class="ptile defense-candidate"><span class="p-avatar">${p.avatar}</span><div class="p-name">${p.name}</div><div style="font-size:0.68rem;color:#48c9b0;margin-top:3px">Müdafiə</div></div>`;
+    }).join('')}</div>
+    <div class="info-box mt-12">💬 Hər müdafiəçi özünü izah edir. Hazır olduqda final səsverməyə keçin.</div>
+  </div>`;
+  btns.innerHTML=`<button class="btn btn-primary" onclick="startDefVote()">⚖️ Final Səsverməyə Keç</button>`;
+}
+
+function startDefVote(){
+  G.phase='defense-vote';G.defenseVotes={};G.defenseHasVoted={};
+  G.defVoterQueue=G.players.filter(p=>p.alive&&!G.defCandidates.includes(p.id)).map(p=>p.id);
+  G.defVoterQueueIdx=0;
+  addLog('day','⚖️ Final səsvermə başladı.');renderGame();
+}
+
+function getDefVoter(){
+  if(G.defVoterQueueIdx>=G.defVoterQueue.length)return null;
+  return G.players.find(p=>p.id===G.defVoterQueue[G.defVoterQueueIdx])||null;
+}
+
+function renderDefVotePanel(panel,btns,instr){
+  const voter=getDefVoter();const total=G.defVoterQueue.length;const voted=G.defVoterQueueIdx;const allDone=voted>=total;
+  if(allDone){
+    instr.className='info-box mb-12';instr.style.borderLeftColor='var(--gold)';instr.innerHTML='✅ Final səsvermə tamamlandı!';
+    panel.innerHTML=`<div class="card"><p class="section-title">Final Nəticə</p>${buildDefResults()}</div>`;
+    btns.innerHTML=`<button class="btn btn-primary" onclick="processDefResult()">⚖️ Nəticəni Tətbiq Et</button>`;
+    return;
+  }
+  instr.className='info-box mb-12';instr.style.borderLeftColor='var(--red2)';instr.innerHTML=`⚖️ ${voted}/${total} oyunçu səs verdi.`;
+  panel.innerHTML=`<div class="card">
+    <div class="current-voter-box">
+      <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Sıradakı oyunçu:</div>
+      <div class="current-voter-name">${voter?.avatar} ${voter?.name}</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-top:4px">Müdafiəçilərdən birini seç:</div>
+    </div>
+    <div class="players-grid">${G.defCandidates.map(id=>{const p=G.players.find(x=>x.id===id);
+      return `<div class="ptile defense-candidate" onclick="castDefenseVote(${id})"><span class="p-avatar">${p.avatar}</span><div class="p-name">${p.name}</div></div>`;
+    }).join('')}</div>
+    ${voted>0?`<div class="divider"></div><p class="section-title">İndiyə qədər</p>${buildDefResults()}`:''}
+  </div>`;
+  btns.innerHTML=`<button class="btn btn-ghost btn-sm" onclick="skipDefVote()">⏭ Bu oyunçu yoxdur — keç</button>`;
+}
+
+function buildDefResults(){
+  return G.defCandidates.map(id=>{
+    const p=G.players.find(x=>x.id===id);const voters=G.defenseVotes[id]||[];const cnt=voters.length;
+    const names=voters.map(vid=>G.players.find(x=>x.id===vid)?.name||'').filter(Boolean);
+    return `<div class="vote-row no-hover"><span>${p.avatar} ${p.name}</span><div class="vote-bar"><div class="vote-bar-fill" style="width:${cnt*15}%"></div></div><span class="vote-count">${cnt}</span></div>${names.length?`<div style="font-size:0.75rem;color:var(--muted);margin:-5px 0 7px 8px">← ${names.join(', ')}</div>`:''}`;
+  }).join('');
+}
+
+function castDefenseVote(targetId){
+  const voter=getDefVoter();if(!voter)return;
+  if(!G.defenseVotes[targetId])G.defenseVotes[targetId]=[];
+  G.defenseVotes[targetId].push(voter.id);G.defenseHasVoted[voter.id]=true;
+  addLog('day',`🗳 ${voter.name} → ${G.players.find(p=>p.id===targetId)?.name}`);
+  G.defVoterQueueIdx++;renderGame();
+}
+function skipDefVote(){const voter=getDefVoter();if(!voter)return;G.defenseHasVoted[voter.id]=true;G.defVoterQueueIdx++;renderGame();}
+
+function processDefResult(){
+  const counts={};G.defCandidates.forEach(id=>{counts[id]=(G.defenseVotes[id]||[]).length;});
+  const max=Math.max(0,...Object.values(counts));
+  if(max===0){addLog('day','⚖️ Bərabərlik. Linç olmadı.');goNight();return;}
+  const winners=G.defCandidates.filter(id=>counts[id]===max);
+  if(winners.length>1){addLog('day','⚖️ Bərabərlik. Linç olmadı.');goNight();return;}
+  lynchPlayer(winners[0]);
+}
+
+// LYNCH
+function lynchPlayer(id){
+  const target=G.players.find(p=>p.id===id);if(!target)return;
+  if(target.role==='kamikaze'){
+    target.alive=false;addLog('death',`💥 ${target.name} (Kamikaze) linç edildi!`);
+    const alive=G.players.filter(p=>p.alive);
+    showModal('💥 Kamikaze!',`<p><strong>${target.name}</strong> — Kamikaze! Özünüzlə aparmaq istədiyiniz oyunçunu seçin:</p>
+      <div class="players-grid mt-12">${alive.map(p=>`<div class="ptile" onclick="kamikazePick(${p.id})" style="cursor:pointer"><span class="p-avatar">${p.avatar}</span><div class="p-name">${p.name}</div></div>`).join('')}</div>`);
+    return;
+  }
+  target.alive=false;addLog('death',`⚖️ ${target.name} linç edildi! Rolu: ${ROLES[target.role].icon} ${ROLES[target.role].name}`);
+  if(!checkWin())goNight();
+}
+function kamikazePick(id){const t=G.players.find(p=>p.id===id);if(t){t.alive=false;addLog('death',`💥 Kamikaze ${t.name}-i özüylə apardı!`);}closeModal();if(!checkWin())goNight();}
+
+function goNight(){
+  G.round++;G.phase='night';G.nightStep=0;
+  G.votes={};G.hasVoted={};G.voterQueue=[];G.voterQueueIdx=0;
+  G.defenseVotes={};G.defenseHasVoted={};G.defVoterQueue=[];G.defVoterQueueIdx=0;G.defCandidates=[];G.selectedAction=null;
+  renderGame();
+}
+
+// WIN
+function checkWin(){
+  const mA=G.players.filter(p=>p.alive&&(p.role==='mafia'||p.role==='ajan')).length;
+  const cA=G.players.filter(p=>p.alive&&p.role!=='mafia'&&p.role!=='ajan').length;
+  if(mA===0){endGame('city');return true;}if(mA>=cA){endGame('mafia');return true;}return false;
+}
+function endGame(winner){
+  showScreen('screen-result');const isMafia=winner==='mafia';launchConfetti(isMafia?'#c0392b':'#2980b9');
+  const tbl=G.players.map(p=>`<tr><td style="padding:7px 10px">${p.avatar} ${p.name}</td><td style="padding:7px 10px">${ROLES[p.role].icon} ${ROLES[p.role].name}</td><td style="padding:7px 10px;color:${p.alive?'var(--green2)':'var(--red2)'}">${p.alive?'Canlı':'Ölü'}</td></tr>`).join('');
+  document.getElementById('result-content').innerHTML=`
     <div class="result-banner ${isMafia?'win-mafia':'win-citizens'}">
-      <div style="font-size:5rem; margin-bottom:16px">${isMafia?'🔫':'🏆'}</div>
-      <h2>${isMafia ? 'MAFİA QALIB GƏLDİ!' : 'ŞƏHƏRLİLƏR QALIB GƏLDİ!'}</h2>
-      <p style="color:var(--muted); font-size:1.1rem; margin-top:8px">
-        ${isMafia ? 'Cinayətkarlar şəhəri ələ keçirdi.' : 'Ədalət qorundu, mafia məğlub oldu!'}
-      </p>
+      <div style="font-size:5rem;margin-bottom:13px">${isMafia?'🔫':'🏆'}</div>
+      <h2 style="font-size:clamp(1.8rem,6vw,3.5rem)">${isMafia?'MAFİA QALIB GƏLDİ!':'ŞƏHƏRLİLƏR QALIB GƏLDİ!'}</h2>
+      <p style="color:var(--muted);font-size:1rem;margin-top:7px">${isMafia?'Cinayətkarlar şəhəri ələ keçirdi.':'Ədalət qorundu!'}</p>
     </div>
-
-    <div class="card mt-24 mb-20">
-      <div class="section-title">Oyun Jurnalı</div>
-      <div class="game-log" style="max-height:200px">${document.getElementById('full-log')?.innerHTML || ''}</div>
-    </div>
-
-    <div class="card mb-20">
-      <div class="section-title">Final — Oyunçu Rolları</div>
-      <table style="width:100%; border-collapse:collapse; font-size:0.95rem">
-        <thead>
-          <tr style="color:var(--muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em">
-            <th style="text-align:left; padding:8px 12px; border-bottom:1px solid var(--border)">Ad</th>
-            <th style="text-align:left; padding:8px 12px; border-bottom:1px solid var(--border)">Rol</th>
-            <th style="text-align:left; padding:8px 12px; border-bottom:1px solid var(--border)">Vəziyyət</th>
-          </tr>
-        </thead>
-        <tbody>${roleTable}</tbody>
+    <div class="card mt-16 mb-14">
+      <p class="section-title">Final — Oyunçu Rolları</p>
+      <table style="width:100%;border-collapse:collapse;font-size:0.9rem">
+        <thead><tr style="color:var(--muted);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.05em">
+          <th style="text-align:left;padding:7px 10px;border-bottom:1px solid var(--border)">Ad</th>
+          <th style="text-align:left;padding:7px 10px;border-bottom:1px solid var(--border)">Rol</th>
+          <th style="text-align:left;padding:7px 10px;border-bottom:1px solid var(--border)">Vəziyyət</th>
+        </tr></thead><tbody>${tbl}</tbody>
       </table>
     </div>
-
-    <div class="flex justify-center gap-12 mb-20 flex-wrap">
-      <button class="btn btn-primary btn-lg" onclick="showScreen('screen-setup'); initSetup()">🔄 Yenidən Oyna</button>
-      <button class="btn btn-ghost" onclick="showScreen('screen-welcome')">🏠 Ana Səhifə</button>
+    <div class="card mb-14">
+      <p class="section-title">Oyun Tarixi</p>
+      <div class="game-log">${G.log.slice().reverse().map(e=>`<div class="log-${e.type}">[Tur ${e.round}] ${e.msg}</div>`).join('')}</div>
     </div>
-  `;
+    <div class="flex justify-center gap-12 mb-20 flex-wrap">
+      <button class="btn btn-primary btn-lg" onclick="showScreen('screen-setup');initSetup()">🔄 Yenidən Oyna</button>
+      <button class="btn btn-ghost" onclick="showScreen('screen-welcome')">🏠 Ana Səhifə</button>
+    </div>`;
 }
 
-// ============================================================
-//  LOG
-// ============================================================
-function addLog(type, msg) {
-  state.log.push({ type, msg, round: state.round });
-  renderLog();
+// LOG
+function addLog(type,msg){G.log.push({type,msg,round:G.round});renderLog();}
+function renderLog(){const el=document.getElementById('full-log');if(!el)return;el.innerHTML=G.log.slice().reverse().map(e=>`<div class="log-${e.type}">[Tur ${e.round}] ${e.msg}</div>`).join('');}
+
+// MODAL
+function showModal(title,content){document.getElementById('modal-content').innerHTML=`<h3>${title}</h3><div>${content}</div>`;document.getElementById('modal-overlay').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+function closeModalOutside(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+// CONFETTI
+function launchConfetti(color){
+  const colors=[color,'#d4a853','#ffffff'];
+  for(let i=0;i<50;i++) setTimeout(()=>{
+    const el=document.createElement('div');el.className='confetti-piece';
+    el.style.cssText=`left:${Math.random()*100}vw;top:0;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*2}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;`;
+    document.body.appendChild(el);setTimeout(()=>el.remove(),5500);
+  },i*35);
 }
 
-function renderLog() {
-  const logEl = document.getElementById('full-log');
-  if(!logEl) return;
-  logEl.innerHTML = state.log.slice().reverse().map(e =>
-    `<div class="log-entry ${e.type}">[Tur ${e.round}] ${e.msg}</div>`
-  ).join('');
-}
-
-// ============================================================
-//  MODAL
-// ============================================================
-function showModal(title, content) {
-  document.getElementById('modal-content').innerHTML = `<h3>${title}</h3><div>${content}</div>`;
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-function closeModal() {
-  document.getElementById('modal-overlay').classList.add('hidden');
-}
-
-// ============================================================
-//  CONFETTI
-// ============================================================
-function launchConfetti(color) {
-  const colors = [color, '#d4a853', '#ffffff', '#f0c060'];
-  for(let i=0;i<60;i++) {
-    setTimeout(() => {
-      const el = document.createElement('div');
-      el.className = 'confetti-piece';
-      el.style.cssText = `
-        left:${Math.random()*100}vw;
-        top:0;
-        background:${colors[Math.floor(Math.random()*colors.length)]};
-        animation-duration:${2+Math.random()*3}s;
-        animation-delay:${Math.random()*2}s;
-        transform:rotate(${Math.random()*360}deg);
-        width:${6+Math.random()*8}px;
-        height:${6+Math.random()*8}px;
-      `;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 5000);
-    }, i*30);
-  }
-}
-
-// ============================================================
-//  INIT
-// ============================================================
 initSetup();
 </script>
 </body>
