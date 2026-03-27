@@ -1,4 +1,4 @@
-name: Build Android AAB
+name: Build Android AAB and APK
 
 on:
   push:
@@ -23,25 +23,9 @@ jobs:
     - name: Install Android SDK 35
       run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-    - name: Generate Keystore
+    - name: Restore Keystore
       run: |
-        keytool -genkey -v \
-          -keystore mafia-keystore.jks \
-          -alias mafia \
-          -keyalg RSA \
-          -keysize 2048 \
-          -validity 10000 \
-          -storepass Mafia2024! \
-          -keypass Mafia2024! \
-          -dname "CN=Mafia Oyunu, OU=Games, O=Baku, L=Baku, S=Baku, C=AZ"
-        base64 -w 0 mafia-keystore.jks > keystore-base64.txt
-        echo "KEYSTORE_BASE64 secret üçün bu faylı yüklə!"
-
-    - name: Upload Keystore Base64
-      uses: actions/upload-artifact@v4
-      with:
-        name: keystore-base64
-        path: keystore-base64.txt
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > mafia-keystore.jks
 
     - name: Create Android Project
       run: |
@@ -103,6 +87,9 @@ jobs:
                     minifyEnabled false
                     signingConfig signingConfigs.release
                 }
+                debug {
+                    signingConfig signingConfigs.release
+                }
             }
         }
         dependencies {
@@ -155,10 +142,16 @@ jobs:
         wget -q https://services.gradle.org/distributions/gradle-8.1-bin.zip
         unzip -q gradle-8.1-bin.zip
         ./gradle-8.1/bin/gradle wrapper --gradle-version=8.1
-        JAVA_HOME=$JAVA_HOME ./gradlew bundleRelease
+        JAVA_HOME=$JAVA_HOME ./gradlew bundleRelease assembleRelease
 
     - name: Upload AAB
       uses: actions/upload-artifact@v4
       with:
         name: mafia-aab
         path: project/app/build/outputs/bundle/release/app-release.aab
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: mafia-apk
+        path: project/app/build/outputs/apk/release/app-release.apk
