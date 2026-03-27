@@ -17,48 +17,48 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Create Android TWA Project
+    - name: Create Android Project
       run: |
         mkdir -p app/src/main/assets
+        mkdir -p app/src/main/java/com/mafia/oyun
+        mkdir -p app/src/main/res/values
         cp index.html app/src/main/assets/
-        
-        cat > settings.gradle << 'EOF'
+
+        cat > settings.gradle.kts << 'EOF'
         rootProject.name = "MafiaOyunu"
-        include ':app'
+        include(":app")
         EOF
-        
-        cat > build.gradle << 'EOF'
-        buildscript {
-            repositories { google(); mavenCentral() }
-            dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
-        }
-        allprojects {
-            repositories { google(); mavenCentral() }
+
+        cat > build.gradle.kts << 'EOF'
+        plugins {
+            id("com.android.application") version "8.2.0" apply false
         }
         EOF
-        
-        cat > app/build.gradle << 'EOF'
-        apply plugin: 'com.android.application'
+
+        cat > app/build.gradle.kts << 'EOF'
+        plugins {
+            id("com.android.application")
+        }
         android {
-            compileSdk 34
+            compileSdk = 34
+            namespace = "com.mafia.oyun"
             defaultConfig {
-                applicationId "com.mafia.oyun"
-                minSdk 24
-                targetSdk 34
-                versionCode 1
-                versionName "1.0"
+                applicationId = "com.mafia.oyun"
+                minSdk = 24
+                targetSdk = 34
+                versionCode = 1
+                versionName = "1.0"
             }
-            buildTypes {
-                release { minifyEnabled false }
-            }
-            namespace "com.mafia.oyun"
         }
         dependencies {
-            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation("androidx.appcompat:appcompat:1.6.1")
         }
         EOF
-        
-        mkdir -p app/src/main/java/com/mafia/oyun
+
+        cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
+        distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
+        EOF
+
         cat > app/src/main/java/com/mafia/oyun/MainActivity.java << 'EOF'
         package com.mafia.oyun;
         import android.app.Activity;
@@ -70,20 +70,19 @@ jobs:
             protected void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
                 WebView webView = new WebView(this);
-                WebSettings settings = webView.getSettings();
-                settings.setJavaScriptEnabled(true);
-                settings.setDomStorageEnabled(true);
+                WebSettings s = webView.getSettings();
+                s.setJavaScriptEnabled(true);
+                s.setDomStorageEnabled(true);
                 webView.loadUrl("file:///android_asset/index.html");
                 setContentView(webView);
             }
         }
         EOF
-        
-        mkdir -p app/src/main/res/values
+
         cat > app/src/main/res/values/strings.xml << 'EOF'
         <resources><string name="app_name">Mafia Oyunu</string></resources>
         EOF
-        
+
         cat > app/src/main/AndroidManifest.xml << 'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -100,11 +99,11 @@ jobs:
         </manifest>
         EOF
 
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
     - name: Build APK
-      run: |
-        chmod +x gradlew 2>/dev/null || true
-        gradle wrapper
-        ./gradlew assembleDebug
+      run: ./gradlew assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
