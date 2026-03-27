@@ -7,78 +7,80 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+    container:
+      image: mingc/android-build-box:latest
+
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-
-    - name: Setup Gradle 8.2
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: '8.2'
-
-    - name: Create Android Project
+    - name: Create Project and Build
       run: |
-        mkdir -p app/src/main/assets
-        mkdir -p app/src/main/java/com/mafia/oyun
-        mkdir -p app/src/main/res/values
-        cp index.html app/src/main/assets/
+        mkdir -p project/app/src/main/assets
+        mkdir -p project/app/src/main/java/com/mafia/oyun
+        mkdir -p project/app/src/main/res/values
+        cp index.html project/app/src/main/assets/
 
-        cat > gradle.properties << 'EOF'
+        cat > project/gradle.properties << 'EOF'
         android.useAndroidX=true
         android.enableJetifier=true
         EOF
 
-        cat > settings.gradle.kts << 'EOF'
-        pluginManagement {
-            repositories {
-                google()
-                mavenCentral()
-                gradlePluginPortal()
-            }
-        }
-        dependencyResolutionManagement {
-            repositories {
-                google()
-                mavenCentral()
-            }
-        }
+        cat > project/settings.gradle << 'EOF'
         rootProject.name = "MafiaOyunu"
-        include(":app")
+        include ':app'
         EOF
 
-        cat > build.gradle.kts << 'EOF'
-        plugins {
-            id("com.android.application") version "8.2.0" apply false
+        cat > project/build.gradle << 'EOF'
+        buildscript {
+            repositories {
+                google()
+                mavenCentral()
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:7.4.2'
+            }
+        }
+        allprojects {
+            repositories {
+                google()
+                mavenCentral()
+            }
         }
         EOF
 
-        cat > app/build.gradle.kts << 'EOF'
-        plugins {
-            id("com.android.application")
-        }
+        cat > project/app/build.gradle << 'EOF'
+        apply plugin: 'com.android.application'
         android {
-            compileSdk = 34
-            namespace = "com.mafia.oyun"
+            compileSdkVersion 33
+            namespace 'com.mafia.oyun'
             defaultConfig {
-                applicationId = "com.mafia.oyun"
-                minSdk = 24
-                targetSdk = 34
-                versionCode = 1
-                versionName = "1.0"
+                applicationId 'com.mafia.oyun'
+                minSdkVersion 24
+                targetSdkVersion 33
+                versionCode 1
+                versionName '1.0'
+            }
+            signingConfigs {
+                release {
+                    storeFile file('keystore.jks')
+                    storePassword System.getenv('STORE_PASSWORD')
+                    keyAlias System.getenv('KEY_ALIAS')
+                    keyPassword System.getenv('KEY_PASSWORD')
+                }
+            }
+            buildTypes {
+                release {
+                    minifyEnabled false
+                    signingConfig signingConfigs.release
+                }
             }
         }
         dependencies {
-            implementation("androidx.appcompat:appcompat:1.6.1")
+            implementation 'androidx.appcompat:appcompat:1.4.0'
         }
         EOF
 
-        cat > app/src/main/java/com/mafia/oyun/MainActivity.java << 'EOF'
+        cat > project/app/src/main/java/com/mafia/oyun/MainActivity.java << 'EOF'
         package com.mafia.oyun;
         import android.app.Activity;
         import android.os.Bundle;
@@ -88,21 +90,20 @@ jobs:
             @Override
             protected void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
-                WebView webView = new WebView(this);
-                WebSettings s = webView.getSettings();
-                s.setJavaScriptEnabled(true);
-                s.setDomStorageEnabled(true);
-                webView.loadUrl("file:///android_asset/index.html");
-                setContentView(webView);
+                WebView w = new WebView(this);
+                w.getSettings().setJavaScriptEnabled(true);
+                w.getSettings().setDomStorageEnabled(true);
+                w.loadUrl("file:///android_asset/index.html");
+                setContentView(w);
             }
         }
         EOF
 
-        cat > app/src/main/res/values/strings.xml << 'EOF'
+        cat > project/app/src/main/res/values/strings.xml << 'EOF'
         <resources><string name="app_name">Mafia Oyunu</string></resources>
         EOF
 
-        cat > app/src/main/AndroidManifest.xml << 'EOF'
+        cat > project/app/src/main/AndroidManifest.xml << 'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             <application
@@ -118,11 +119,27 @@ jobs:
         </manifest>
         EOF
 
-    - name: Build APK
-      run: gradle assembleDebug
+        keytool -genkey -v \
+          -keystore project/app/keystore.jks \
+          -alias $KEY_ALIAS \
+          -keyalg RSA \
+          -keysize 2048 \
+          -validity 10000 \
+          -storepass $STORE_PASSWORD \
+          -keypass $KEY_PASSWORD \
+          -dname "CN=Mafia Oyunu, OU=Games, O=Baku, L=Baku, S=Baku, C=AZ"
 
-    - name: Upload APK
+        cd project
+        gradle wrapper --gradle-version=7.5
+        ./gradlew bundleRelease
+
+      env:
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+
+    - name: Upload AAB
       uses: actions/upload-artifact@v4
       with:
-        name: mafia-apk
-        path: app/build/outputs/apk/debug/app-debug.apk
+        name: mafia-aab
+        path: project/app/build/outputs/bundle/release/app-release.aab
