@@ -128,10 +128,9 @@ jobs:
           -storepass $STORE_PASSWORD \
           -keypass $KEY_PASSWORD \
           -dname "CN=Mafia Oyunu, OU=Games, O=Baku, L=Baku, S=Baku, C=AZ"
-
         cd project
-        gradle wrapper --gradle-version=7.5
-        ./gradlew bundleRelease
+                /opt/gradle/gradle-7.5/bin/gradle wrapper --gradle-version=7.5
+                ./gradlew bundleRelease
 
       env:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
