@@ -17,31 +17,97 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-
-    - name: Install Bubblewrap
-      run: npm install -g @bubblewrap/cli
-
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-
-    - name: Init TWA project
+    - name: Create Android TWA Project
       run: |
-        mkdir twa-app && cd twa-app
-        bubblewrap init \
-          --manifest="https://elmanabdulmanafov.github.io/mafia-oyunu/manifest.json" \
-          --directory=.
+        mkdir -p app/src/main/assets
+        cp index.html app/src/main/assets/
+        
+        cat > settings.gradle << 'EOF'
+        rootProject.name = "MafiaOyunu"
+        include ':app'
+        EOF
+        
+        cat > build.gradle << 'EOF'
+        buildscript {
+            repositories { google(); mavenCentral() }
+            dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
+        }
+        allprojects {
+            repositories { google(); mavenCentral() }
+        }
+        EOF
+        
+        cat > app/build.gradle << 'EOF'
+        apply plugin: 'com.android.application'
+        android {
+            compileSdk 34
+            defaultConfig {
+                applicationId "com.mafia.oyun"
+                minSdk 24
+                targetSdk 34
+                versionCode 1
+                versionName "1.0"
+            }
+            buildTypes {
+                release { minifyEnabled false }
+            }
+            namespace "com.mafia.oyun"
+        }
+        dependencies {
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+        }
+        EOF
+        
+        mkdir -p app/src/main/java/com/mafia/oyun
+        cat > app/src/main/java/com/mafia/oyun/MainActivity.java << 'EOF'
+        package com.mafia.oyun;
+        import android.app.Activity;
+        import android.os.Bundle;
+        import android.webkit.WebView;
+        import android.webkit.WebSettings;
+        public class MainActivity extends Activity {
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                WebView webView = new WebView(this);
+                WebSettings settings = webView.getSettings();
+                settings.setJavaScriptEnabled(true);
+                settings.setDomStorageEnabled(true);
+                webView.loadUrl("file:///android_asset/index.html");
+                setContentView(webView);
+            }
+        }
+        EOF
+        
+        mkdir -p app/src/main/res/values
+        cat > app/src/main/res/values/strings.xml << 'EOF'
+        <resources><string name="app_name">Mafia Oyunu</string></resources>
+        EOF
+        
+        cat > app/src/main/AndroidManifest.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <application
+                android:label="@string/app_name"
+                android:theme="@style/Theme.AppCompat.NoActionBar">
+                <activity android:name=".MainActivity" android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN"/>
+                        <category android:name="android.intent.category.LAUNCHER"/>
+                    </intent-filter>
+                </activity>
+            </application>
+        </manifest>
+        EOF
 
     - name: Build APK
       run: |
-        cd twa-app
-        bubblewrap build --skipPwaValidation
+        chmod +x gradlew 2>/dev/null || true
+        gradle wrapper
+        ./gradlew assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: mafia-apk
-        path: 'twa-app/app-release-unsigned.apk'
+        path: app/build/outputs/apk/debug/app-debug.apk
