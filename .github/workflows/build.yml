@@ -21,8 +21,27 @@ jobs:
       uses: android-actions/setup-android@v3
 
     - name: Install Android SDK 35
+      run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+    - name: Generate Keystore
       run: |
-        sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        keytool -genkey -v \
+          -keystore mafia-keystore.jks \
+          -alias mafia \
+          -keyalg RSA \
+          -keysize 2048 \
+          -validity 10000 \
+          -storepass Mafia2024! \
+          -keypass Mafia2024! \
+          -dname "CN=Mafia Oyunu, OU=Games, O=Baku, L=Baku, S=Baku, C=AZ"
+        base64 -w 0 mafia-keystore.jks > keystore-base64.txt
+        echo "KEYSTORE_BASE64 secret üçün bu faylı yüklə!"
+
+    - name: Upload Keystore Base64
+      uses: actions/upload-artifact@v4
+      with:
+        name: keystore-base64
+        path: keystore-base64.txt
 
     - name: Create Android Project
       run: |
@@ -74,9 +93,9 @@ jobs:
             signingConfigs {
                 release {
                     storeFile file('keystore.jks')
-                    storePassword System.getenv('STORE_PASSWORD')
-                    keyAlias System.getenv('KEY_ALIAS')
-                    keyPassword System.getenv('KEY_PASSWORD')
+                    storePassword 'Mafia2024!'
+                    keyAlias 'mafia'
+                    keyPassword 'Mafia2024!'
                 }
             }
             buildTypes {
@@ -130,26 +149,13 @@ jobs:
         </manifest>
         EOF
 
-        keytool -genkey -v \
-          -keystore project/app/keystore.jks \
-          -alias $KEY_ALIAS \
-          -keyalg RSA \
-          -keysize 2048 \
-          -validity 10000 \
-          -storepass $STORE_PASSWORD \
-          -keypass $KEY_PASSWORD \
-          -dname "CN=Mafia Oyunu, OU=Games, O=Baku, L=Baku, S=Baku, C=AZ"
+        cp mafia-keystore.jks project/app/keystore.jks
 
         cd project
         wget -q https://services.gradle.org/distributions/gradle-8.1-bin.zip
         unzip -q gradle-8.1-bin.zip
         ./gradle-8.1/bin/gradle wrapper --gradle-version=8.1
         JAVA_HOME=$JAVA_HOME ./gradlew bundleRelease
-
-      env:
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
 
     - name: Upload AAB
       uses: actions/upload-artifact@v4
